@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.desarrollo.fiscalesfrontend.controller.EstablecimientoMesas">
+    <padding>
+        <Insets bottom="15" left="20" right="20" top="15"> </Insets>
+    </padding>
+    <center>
+        <VBox>
+            <HBox spacing="20">
+                <HBox alignment="TOP_LEFT" spacing="20" HBox.hgrow="ALWAYS">
+                    <GridPane hgap="10" vgap="10">
+                        <Label fx:id="etiquetaID" text="" GridPane.rowIndex="0" GridPane.columnIndex="0"> </Label>
+                        <Label fx:id="valorID" text="" GridPane.rowIndex="0" GridPane.columnIndex="1"> </Label>
+                        <Label text="Establecimiento" GridPane.rowIndex="1" GridPane.columnIndex="0"> </Label>
+                        <ComboBox fx:id="comboEstablecimientos" GridPane.rowIndex="1" GridPane.columnIndex="1"> </ComboBox>
+                        <Label text="Mesa" GridPane.rowIndex="1" GridPane.columnIndex="2"> </Label>
+                        <TextField fx:id="campoNumeroMesa" GridPane.rowIndex="1" GridPane.columnIndex="3" prefWidth="200"> </TextField>
+                        <Button text="Agregar mesa" fx:id="btnAgregarMesa" GridPane.rowIndex="1" GridPane.columnIndex="4" onAction="#agregarMesa"> </Button>
+                    </GridPane>
+                </HBox>
+            </HBox>
+            <FlowPane hgap="15" vgap="15" fx:id="contenedorMesas" prefWrapLength="600" minHeight="200">
+                <!--Aquí vamos agregando las mesas -->
+            </FlowPane>
+            <HBox spacing="20" alignment="CENTER_RIGHT" minHeight="60">
+                <Button fx:id="btnGuardarMesas" text="Guardar mesas" onAction="#guardarMesasSeleccionas"> </Button>
+                <Button fx:id="btnActualizarMesas" text="Actualizar mesas" onAction="#actualizarMesasAsignadas"> </Button>
+                <Button fx:id="cancelarAsignacion" text="Cancelar" onAction="#limpiarCampos"> </Button>
+            </HBox>
+            <Label fx:id="msjExito" text="" textFill="#449416"> </Label>
+            <TableView fx:id="tablaEstablecimientosMesas" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="columnaIdEst" text="ID" prefWidth="40"> </TableColumn>
+                    <TableColumn fx:id="columnaNombreEst" text="Establecimiento" prefWidth="250"> </TableColumn>
+                    <TableColumn fx:id="columnaCantidadMesas" text="Cantidad de mesas" prefWidth="160"> </TableColumn>
+                    <TableColumn fx:id="columnaMesaInicial" text="Desde la mesa" prefWidth="120"> </TableColumn>
+                    <TableColumn fx:id="columnaMesaFinal" text="Hasta la mesa" prefWidth="120"> </TableColumn>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

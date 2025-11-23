@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.desarrollo.fiscalesfrontend.controller.FiscalesController">
+
+    <top>
+        <HBox spacing="10" style="-fx-padding: 10">
+            <Button text="ABM de Fiscales" onAction="#abrirABM"> </Button>
+        </HBox>
+    </top>
+
+    <center>
+        <StackPane fx:id="contenedorFiscales"> </StackPane>
+    </center>
+
+</BorderPane>

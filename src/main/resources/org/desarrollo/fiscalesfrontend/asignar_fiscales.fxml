@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.desarrollo.fiscalesfrontend.controller.AsignarFiscales">
+    <padding>
+        <Insets bottom="15" left="20" right="20" top="15"> </Insets>
+    </padding>
+    <center>
+        <VBox>
+            <HBox spacing="20">
+                <HBox spacing="20" VBox.vgrow="ALWAYS">
+                    <GridPane hgap="10" vgap="10">
+                        <Label text="Establecimiento" GridPane.rowIndex="0" GridPane.columnIndex="0"> </Label>
+                        <ComboBox fx:id="comboBoxEstablecimiento" GridPane.rowIndex="0" GridPane.columnIndex="1"> </ComboBox>
+                        <Label text="Fiscal General" GridPane.rowIndex="0" GridPane.columnIndex="2"> </Label>
+                        <ComboBox fx:id="comboBoxFiscalGeneral" GridPane.rowIndex="0" GridPane.columnIndex="3"> </ComboBox>
+                        <Button fx:id="btnGuardarFiscalGeneral" text="Asignar" onAction="#guardarFiscalGeneral" GridPane.rowIndex="0" GridPane.columnIndex="4"> </Button>
+                        <Label text="Fiscal/les Generales" GridPane.rowIndex="0" GridPane.columnIndex="5"> </Label>
+                        <Label fx:id="generales" GridPane.rowIndex="0" GridPane.columnIndex="6"> </Label>
+                    </GridPane>
+
+                </HBox>
+            </HBox>
+            <ScrollPane fx:id="scrollMesas" fitToWidth="true">
+                <FlowPane hgap="10" vgap="10" fx:id="contenedorMesas" prefWrapLength="600" minHeight="300">
+                    <!-- Acá agregamos las mesas -->
+                </FlowPane>
+            </ScrollPane>
+            <Label fx:id="msjexito" textFill="#449416"> </Label>
+        </VBox>
+    </center>
+</BorderPane>

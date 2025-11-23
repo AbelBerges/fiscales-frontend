@@ -1,0 +1,23 @@
+/* MESA COMPLETA */
+.mesa-completa {
+    -fx-border-color: #5cb85c;
+    -fx-border-width: 3;
+    -fx-background-color: rgba(92,184,92,0.08);
+    -fx-background-radius: 6;
+}
+
+/* MESA INCOMPLETA */
+.mesa-incompleta {
+    -fx-border-color: #f0ad4e;
+    -fx-border-width: 3;
+    -fx-background-color: rgba(240,173,78,0.08);
+    -fx-background-radius: 6;
+}
+
+/* MESA VACÍA */
+.mesa-vacia {
+    -fx-border-color: #d9534f;
+    -fx-border-width: 3;
+    -fx-background-color: rgba(217,83,79,0.08);
+    -fx-background-radius: 6;
+}

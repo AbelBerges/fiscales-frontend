@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.desarrollo.fiscalesfrontend.controller.EstablecimientoABMController">
+    <padding>
+        <Insets bottom="15" left="20" right="20" top="15"> </Insets>
+    </padding>
+    <!-- CENTRO: Formulario + Imagen + Tabla -->
+    <center>
+        <VBox spacing="20">
+            <!-- HBox: formulario + imagen -->
+            <HBox alignment="TOP_LEFT" spacing="20" HBox.hgrow="ALWAYS">
+
+                <GridPane hgap="10" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="80" />
+                        <ColumnConstraints prefWidth="230" />
+                        <ColumnConstraints minWidth="80" />
+                        <ColumnConstraints prefWidth="230" />
+                    </columnConstraints>
+                    <!-- ############# Fila 1 ############# -->
+                    <Label text="Nombre" GridPane.columnIndex="0" GridPane.rowIndex="0"> </Label>
+                    <TextField fx:id="txtNombreEstablecimiento" GridPane.columnIndex="1" GridPane.rowIndex="0"> </TextField>
+                    <Label fx:id="etiquetaID" text="" GridPane.columnIndex="2" GridPane.rowIndex="0" alignment="CENTER_RIGHT"> </Label>
+                    <Label fx:id="valorId" text="" GridPane.columnIndex="3" GridPane.rowIndex="0" disable="true"> </Label>
+                    <!-- ############# Fila 2 ############# -->
+                    <Label text="Decripción" GridPane.columnIndex="0" GridPane.rowIndex="1"> </Label>
+                    <TextField fx:id="txtDescripcionEstablecimiento" GridPane.columnIndex="1" GridPane.rowIndex="1"> </TextField>
+
+                    <!-- ############# Fila 3 ############# -->
+                    <Label text="Tipo de Establecimiento" GridPane.columnIndex="0" GridPane.rowIndex="2"> </Label>
+                    <ComboBox fx:id="tipoEstablecimiento" GridPane.columnIndex="1" GridPane.rowIndex="2"> </ComboBox>
+
+                    <!-- ############# Fila 4 #############
+                    <Label text="Cantidad de mesas" GridPane.columnIndex="0" GridPane.rowIndex="3"> </Label>
+                    <TextField fx:id="txtCantidadMesas" GridPane.columnIndex="1" GridPane.rowIndex="3"> </TextField>
+                    -->
+
+                    <!-- ############# Fila 5 ############# -->
+                    <Label text="Domicilio del establecimiento" textFill="#eb6117" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="4">
+                        <font>
+                            <Font size="15.0" />
+                        </font>
+                    </Label>
+                    <!-- ############# Fila 6 ############# -->
+                    <Label text="Calle" GridPane.columnIndex="0" GridPane.rowIndex="5"> </Label>
+                    <TextField fx:id="txtCalle" promptText="Buscar calle..." GridPane.columnIndex="1" GridPane.rowIndex="5"> </TextField>
+
+                    <Label text="Altura" GridPane.columnIndex="2" GridPane.rowIndex="5"> </Label>
+                    <TextField fx:id="txtAlturaEstablecimiento" GridPane.columnIndex="3" GridPane.rowIndex="5"> </TextField>
+
+                    <!-- ############# Fila 8 ############# -->
+                    <Label text="Piso" GridPane.columnIndex="0" GridPane.rowIndex="7"> </Label>
+                    <ComboBox fx:id="tipoPisoEstablecimiento" GridPane.columnIndex="1" GridPane.rowIndex="7"> </ComboBox>
+
+                    <Label text="Dpto" GridPane.columnIndex="2" GridPane.rowIndex="7"> </Label>
+                    <ComboBox fx:id="tipoDepartamentoEstablecimiento" GridPane.columnIndex="3" GridPane.rowIndex="7"> </ComboBox>
+
+                    <!-- ############# Fila 10 ############# -->
+                    <Label text="Activo" GridPane.columnIndex="0" GridPane.rowIndex="8"> </Label>
+                    <CheckBox fx:id="activoEstablecimiento" GridPane.columnIndex="1" GridPane.rowIndex="8" selected="true"> </CheckBox>
+
+                    <!-- ############# Fila 11 ############# -->
+                    <HBox alignment="CENTER_RIGHT" spacing="10" GridPane.columnIndex="0" GridPane.columnSpan="4" GridPane.rowIndex="9">
+                        <Button fx:id="btnGuardar" onAction="#guardarEstablecimiento" text="Guardar"> </Button>
+                        <Button fx:id="btnActualiazar" text="Actualizar" onAction="#actualizarEstablecimiento"> </Button>
+                        <Button fx:id="btnCancelar" onAction="#limpiarCampos" text="Cancelar"> </Button>
+                    </HBox>
+                    <Label fx:id="msgGrabacionExito" text="" textFill="#449416" GridPane.columnIndex="0" GridPane.columnSpan="4" GridPane.rowIndex="10">
+                  <font>
+                     <Font size="14.0" />
+                  </font></Label>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+               </rowConstraints>
+                </GridPane>
+                <VBox alignment="TOP_CENTER" prefWidth="300" spacing="40">
+                    <ImageView fitWidth="300" preserveRatio="true">
+                        <image>
+                            <Image url="@img/edificio_establecimiento.png"> </Image>
+                        </image>
+                    </ImageView>
+                </VBox>
+            </HBox>
+            <!-- ############# Metemos la tabla al final ############# -->
+            <TableView fx:id="tablaEstablecimiento" prefHeight="180" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colIdEstablecimiento" prefWidth="50" text="ID"> </TableColumn>
+                    <TableColumn fx:id="colNombreEstablecimiento" prefWidth="253" text="Nombre"> </TableColumn>
+                    <TableColumn fx:id="colCantidadMesas" prefWidth="52" text="Mesas"> </TableColumn>
+                    <TableColumn fx:id="colDescripcionEstablecimiento" prefWidth="200" text="Descripción"> </TableColumn>
+                    <TableColumn fx:id="colTipoEstablecimiento" prefWidth="150" text="Tipo Establecimiento"> </TableColumn>
+                    <TableColumn fx:id="colNombreCalleEstablecimiento" prefWidth="200" text="Calle"> </TableColumn>
+                    <TableColumn fx:id="colAlturaEstablecimiento" prefWidth="60" text="Altura"> </TableColumn>
+                    <TableColumn fx:id="colPisoEstablecimiento" prefWidth="50" text="Piso"> </TableColumn>
+                    <TableColumn fx:id="colDepartamentoEstablecimiento" prefWidth="50" text="Depto"> </TableColumn>
+                    <TableColumn fx:id="colActivoEstableimiento" prefWidth="70" text="Activo"> </TableColumn>
+                </columns>
+            </TableView>
+        </VBox>
+
+    </center>
+
+</BorderPane>
