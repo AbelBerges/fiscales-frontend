@@ -33,31 +33,31 @@
             <HBox alignment="TOP_LEFT" spacing="40">
 
                 <!-- FORMULARIO -->
-                <GridPane hgap="10" vgap="10">
+                <GridPane fx:id="gridFormulario" hgap="10" vgap="10" minWidth="620">
                     <columnConstraints>
                         <ColumnConstraints minWidth="80" />
-                        <ColumnConstraints prefWidth="230" />
+                        <ColumnConstraints prefWidth="230" hgrow="ALWAYS"/>
                         <ColumnConstraints minWidth="80" />
-                        <ColumnConstraints prefWidth="230" />
+                        <ColumnConstraints prefWidth="230" hgrow="ALWAYS"/>
                     </columnConstraints>
                     <!-- agrego el id fila 1-->
                     <Label fx:id="etiquetaId" text="" GridPane.columnIndex="0" GridPane.rowIndex="0"> </Label>
                     <Label fx:id="txtValorId" disable="true" text="" GridPane.columnIndex="1" GridPane.rowIndex="0"> </Label>
                     <!-- Fila 2 -->
                     <Label text="Nombre" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                    <TextField fx:id="txtNombreFiscal" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                    <TextField fx:id="txtNombreFiscal" GridPane.columnIndex="1" GridPane.rowIndex="1" minWidth="200"/>
                     <Label text="Apellido" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                    <TextField fx:id="txtApellidoFiscal" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                    <TextField fx:id="txtApellidoFiscal" GridPane.columnIndex="3" GridPane.rowIndex="1" minWidth="200"/>
 
                     <!-- Fila 3 -->
                     <Label text="Edad" GridPane.columnIndex="0" GridPane.rowIndex="2" />
                     <TextField fx:id="txtEdadFiscal" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                    <Label text="Correo" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                    <TextField fx:id="txtCorreoFiscal" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                    <Label text="Correo" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
+                    <TextField fx:id="txtCorreoFiscal" GridPane.columnIndex="3" GridPane.rowIndex="2" minWidth="200"/>
 
                     <!-- Fila 4 -->
-                    <Label text="Teléfono" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                    <TextField fx:id="txtTelefonoFiscal" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                    <Label text="Teléfono" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <TextField fx:id="txtTelefonoFiscal" GridPane.columnIndex="1" GridPane.rowIndex="3" minWidth="200"/>
                     <!--
                     <Label text="Establecimiento" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                     <ComboBox fx:id="elementoEstablecimientoFiscal" GridPane.columnIndex="3" GridPane.rowIndex="2" />
@@ -101,7 +101,7 @@
                         <Button fx:id="btnCancelarFiscal" onAction="#limpiarCampos" text="Cancelar"> </Button>
                     </HBox>
                     <!-- Fila 11 -->
-                    <Label fx:id="msgFiscalGuardado" GridPane.columnIndex="0" GridPane.rowIndex="10"> </Label>
+                    <Label fx:id="msgFiscalGuardado" GridPane.columnIndex="0" GridPane.rowIndex="10" GridPane.columnSpan="2"> </Label>
                    <rowConstraints>
                       <RowConstraints />
                       <RowConstraints />
@@ -118,7 +118,7 @@
                 </GridPane>
 
                 <!-- IMAGEN A LA DERECHA DEL FORMULARIO -->
-                <VBox alignment="TOP_RIGHT" spacing="10">
+                <VBox alignment="TOP_RIGHT" spacing="10" prefWidth="300" minWidth="300">
                     <ImageView fitHeight="300" preserveRatio="true">
                         <image>
                             <Image url="@img/fiscales.jpg" />
@@ -132,26 +132,27 @@
             </HBox>
 
             <!-- TABLA debajo de todo -->
-            <TableView fx:id="tablaFiscales" prefHeight="180" VBox.vgrow="ALWAYS">
-                <columns>
-                    <TableColumn fx:id="colIdFiscal" prefWidth="40" text="ID"> </TableColumn>
-                    <TableColumn fx:id="colNombreFiscal" prefWidth="100" text="Nombre" />
-                    <TableColumn fx:id="colApellidoFiscal" prefWidth="100" text="Apellido" />
-                    <TableColumn fx:id="colJornada" prefWidth="90" text="Jornada"> </TableColumn>
-                    <TableColumn fx:id="colMesa" prefWidth="50" text="Mesa"> </TableColumn>
-                    <TableColumn fx:id="colEdadFiscal" prefWidth="50" text="Edad" />
-                    <TableColumn fx:id="colCorreoFiscal" prefWidth="205" text="Correo"> </TableColumn>
-                    <TableColumn fx:id="colTelefonoFiscal" prefWidth="130" text="Teléfono"> </TableColumn>
-                    <TableColumn fx:id="colTipoFiscal" prefWidth="100" text="Tipo de Fiscal"> </TableColumn>
-                    <TableColumn fx:id="colCalleFiscal" prefWidth="130" text="Calle"> </TableColumn>
-                    <TableColumn fx:id="colTipoPisoFiscal" prefWidth="40" text="Piso"> </TableColumn>
-                    <TableColumn fx:id="colTipoDeparatementoFiscal" prefWidth="40" text="Depto"> </TableColumn>
-                    <TableColumn fx:id="colAlturaFiscal" prefWidth="50" text="Altura"> </TableColumn>
-                    <TableColumn fx:id="colEstablecimientoVota" prefWidth="150" text="Vota en"> </TableColumn>
-                    <TableColumn fx:id="colActivoFiscal" prefWidth="60" text="Activo"> </TableColumn>
-                </columns>
-            </TableView>
-
+            <VBox spacing="10">
+                <TableView fx:id="tablaFiscales" prefHeight="180" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colIdFiscal" prefWidth="40" text="ID"> </TableColumn>
+                        <TableColumn fx:id="colNombreFiscal" prefWidth="100" text="Nombre" />
+                        <TableColumn fx:id="colApellidoFiscal" prefWidth="100" text="Apellido" />
+                        <TableColumn fx:id="colJornada" prefWidth="90" text="Jornada"> </TableColumn>
+                        <TableColumn fx:id="colMesa" prefWidth="50" text="Mesa"> </TableColumn>
+                        <TableColumn fx:id="colEdadFiscal" prefWidth="50" text="Edad" />
+                        <TableColumn fx:id="colCorreoFiscal" prefWidth="205" text="Correo"> </TableColumn>
+                        <TableColumn fx:id="colTelefonoFiscal" prefWidth="130" text="Teléfono"> </TableColumn>
+                        <TableColumn fx:id="colTipoFiscal" prefWidth="100" text="Tipo de Fiscal"> </TableColumn>
+                        <TableColumn fx:id="colCalleFiscal" prefWidth="130" text="Calle"> </TableColumn>
+                        <TableColumn fx:id="colTipoPisoFiscal" prefWidth="40" text="Piso"> </TableColumn>
+                        <TableColumn fx:id="colTipoDeparatementoFiscal" prefWidth="40" text="Depto"> </TableColumn>
+                        <TableColumn fx:id="colAlturaFiscal" prefWidth="50" text="Altura"> </TableColumn>
+                        <TableColumn fx:id="colEstablecimientoVota" prefWidth="150" text="Vota en"> </TableColumn>
+                        <TableColumn fx:id="colActivoFiscal" prefWidth="60" text="Activo"> </TableColumn>
+                    </columns>
+                </TableView>
+            </VBox>
         </VBox>
     </center>
 </BorderPane>

@@ -18,11 +18,14 @@ import org.desarrollo.fiscalesfrontend.dto.AsignacionMesasRequestDTO;
 import org.desarrollo.fiscalesfrontend.dto.EstablecimientoMesasDTO;
 import org.desarrollo.fiscalesfrontend.model.Establecimiento;
 import org.desarrollo.fiscalesfrontend.model.Mesa;
+import org.desarrollo.fiscalesfrontend.model.TipoEstablecimiento;
 import org.desarrollo.fiscalesfrontend.service.EstablecimientoServicio;
 import org.desarrollo.fiscalesfrontend.service.MesaServicio;
 
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.*;
+import java.util.function.Function;
 
 
 public class EstablecimientoMesas {
@@ -30,7 +33,7 @@ public class EstablecimientoMesas {
     @FXML private TextField campoNumeroMesa;
     @FXML private ComboBox<Establecimiento> comboEstablecimientos;
     @FXML private FlowPane contenedorMesas;
-    @FXML private Label msjExito, etiquetaID, valorID;
+    @FXML private Label msjExito, etiquetaID, valorID, nombreEstablecimiento;
     @FXML private Button btnAgregarMesa, btnGuardarMesas, btnActualizarMesas, cancelarAsignacion;
     //Creamos los elementos de la tabla
     @FXML private TableView<EstablecimientoMesasDTO> tablaEstablecimientosMesas;
@@ -114,14 +117,17 @@ public class EstablecimientoMesas {
             AsignacionMesasRequestDTO dto = mesaServicio.mesasPorEstablecimiento(datos.getIdEstablecimiento());
             etiquetaID.setText("ID");
             valorID.setText(String.valueOf(datos.getIdEstablecimiento()));
-            if (datos.getNombre() != null) {
+            //System.out.println("a ver el nombre " + datos.getNombre());
+            /*if (datos.getNombre() != null) {
                 Integer elId = datos.getIdEstablecimiento();
                 comboEstablecimientos.getItems()
                         .stream()
                         .filter(establecimiento -> establecimiento != null && Objects.equals(establecimiento.getIdEstablecimiento(), elId))
                         .findFirst()
                         .ifPresent(comboEstablecimientos::setValue);
-            }
+            }*/
+            nombreEstablecimiento.setText(datos.getNombre());
+            comboEstablecimientos.setDisable(true);
             for (Integer i : dto.numerosMesa()) {
                 Mesa temp = new Mesa();
                 temp.setNumeroMesa(i);
@@ -133,8 +139,6 @@ public class EstablecimientoMesas {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 
     private void cargarTablaEstablecimientosMesas() {
@@ -143,7 +147,7 @@ public class EstablecimientoMesas {
             protected List<EstablecimientoMesasDTO> call() throws Exception {
                 List<EstablecimientoMesasDTO> resultados = new ArrayList<>();
                 EstablecimientoMesasDTO resumen = new EstablecimientoMesasDTO();
-                for (Establecimiento e : servicioEst.listarEstablecimientos()) {
+                for (Establecimiento e : servicioEst.listarEstablecimientosConMesas()) {
                     try {
                         resumen = servicioEst.mesasResumen(e.getIdEstablecimiento());
                         resultados.add(resumen);
@@ -173,15 +177,27 @@ public class EstablecimientoMesas {
         Task<List<Establecimiento>> tarea = new Task<List<Establecimiento>>() {
             @Override
             protected List<Establecimiento> call() throws Exception {
-                return servicioEst.listarEstablecimientos();
+                return servicioEst.listarEstablecimientosSinMesa();
             }
         };
         tarea.setOnSucceeded(evento -> {
-            comboEstablecimientos.getItems().setAll(tarea.getValue());
+            List<Establecimiento> lista = tarea.getValue();
+            comboEstablecimientos.getItems().setAll(lista.stream().sorted(ordenarLista(Establecimiento::getNombreEstablecimiento)).toList());
         });
         String msg = tarea.getMessage();
         tarea.setOnFailed(evento -> mostarAlerta("Error", "No se pudo recuperar la lista de establecimiento" + msg, Alert.AlertType.ERROR));
         new Thread(tarea).start();
+    }
+
+    private <T> Comparator<T> ordenarLista(Function<T, String> mapper) {
+        return Comparator.comparing(t-> normalizar(mapper.apply(t)),
+                String.CASE_INSENSITIVE_ORDER);
+    }
+
+    private String normalizar(String texto) {
+        if (texto == null) return "";
+        String nfd = java.text.Normalizer.normalize(texto, Normalizer.Form.NFD);
+        return nfd.replaceAll("\\p{M}", ""); // elimina diacríticos (acentos)
     }
 
     @FXML
@@ -272,7 +288,8 @@ public class EstablecimientoMesas {
         List<Integer> listado = mesasSeleccionadas.stream()
                 .map(Mesa::getNumeroMesa)
                 .toList();
-        Integer elId = comboEstablecimientos.getValue().getIdEstablecimiento();
+        //Integer elId = comboEstablecimientos.getValue().getIdEstablecimiento();
+        Integer elId = Integer.parseInt(valorID.getText());
         AsignacionMesasRequestDTO dto = new AsignacionMesasRequestDTO(elId, listado);
         Task<Void> tarea = new Task<Void>() {
             @Override
@@ -430,12 +447,13 @@ public class EstablecimientoMesas {
     private void habilitarGrabarMesas() {
         boolean camposObligatorios = comboEstablecimientos.getValue() != null &&
                 valorID.getText().isBlank() &&
+                nombreEstablecimiento.getText().isBlank() &&
                 !mesasSeleccionadas.isEmpty();
         btnGuardarMesas.setDisable(!camposObligatorios);
     }
 
     private void habilitarActualizar() {
-        boolean obligaorios = comboEstablecimientos.getValue() != null &&
+        boolean obligaorios = !nombreEstablecimiento.getText().isBlank() &&
                 !mesasSeleccionadas.isEmpty() &&
                 !valorID.getText().isBlank();
         btnActualizarMesas.setDisable(!obligaorios);
@@ -445,11 +463,13 @@ public class EstablecimientoMesas {
     private void limpiarCampos() {
         etiquetaID.setText("");
         valorID.setText("");
+        nombreEstablecimiento.setText("");
         mesasSeleccionadas.clear();
         contenedorMesas.getChildren().clear();
         comboEstablecimientos.getSelectionModel().clearSelection();
         comboEstablecimientos.setValue(null);
         comboEstablecimientos.setPromptText("Seleccione un establecimiento");
+        comboEstablecimientos.setDisable(false);
         //Forzamos la pérdida de foco del combo
         Platform.runLater(() -> {
             // el campo número de mesa debe estar habilitado porque no hay acciones para dehabilitarlo

@@ -10,6 +10,8 @@ import javafx.fxml.FXML;
 import javafx.geometry.Side;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import org.desarrollo.fiscalesfrontend.dto.*;
 import org.desarrollo.fiscalesfrontend.mapper.EstablecimientoMapper;
 import org.desarrollo.fiscalesfrontend.mapper.FiscalMapper;
@@ -20,7 +22,9 @@ import org.desarrollo.fiscalesfrontend.service.*;
 import org.desarrollo.fiscalesfrontend.validaciones.Validar;
 
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.*;
+import java.util.function.Function;
 
 public class FiscalesABMConrtoller {
 
@@ -36,6 +40,7 @@ public class FiscalesABMConrtoller {
     @FXML private ComboBox<TipoFiscal> elementoTipoFiscal;
     @FXML private ComboBox<Jornada> elementoJornada;
     @FXML private Button btnGuardarFiscal, btnactualizarFiscal, btnCancelarFiscal;
+    @FXML private GridPane gridFormulario;
     //Elementos de la tabla
     @FXML private TableView<Fiscal> tablaFiscales;
     @FXML private TableColumn<Fiscal, Integer> colIdFiscal;
@@ -74,6 +79,8 @@ public class FiscalesABMConrtoller {
 
     @FXML
     public void initialize() {
+        gridFormulario.setMinWidth(620);
+        GridPane.setHgrow(gridFormulario, Priority.ALWAYS);
         colIdFiscal.setCellValueFactory(new PropertyValueFactory<>("idFiscal"));
         colNombreFiscal.setCellValueFactory(new PropertyValueFactory<>("nombreFiscal"));
         colApellidoFiscal.setCellValueFactory(new PropertyValueFactory<>("apellidoFiscal"));
@@ -129,21 +136,26 @@ public class FiscalesABMConrtoller {
         elementoTipoPisoFiscal.setPromptText("Seleccione un piso");
         //Cargamos los tipos de pisos
         cargarTiposPisos();
+        construirComBox(elementoTipoPisoFiscal, TipoPiso::getNombre, "Seleccione un piso");
         //configuramos el texto del combobox de tipo de departamento para la carga asíncrona
         elementoTipoDepartamento.setPromptText("Seleccione un departamento");
         //Cargamos los tipos de departamentos
         cargarTipoDepartamento();
+        construirComBox(elementoTipoDepartamento, TipoDepartamento::getNombre, "Seleccione un departamento");
         //Configuramos el texto del combobox de tipo de fiscal para la carga asíncrona
         elementoTipoFiscal.setPromptText("Seleccione tipo Fiscal");
         //Cargampos los tipos de fiscales
         cargarTiposFiscales();
+        construirComBox(elementoTipoFiscal, TipoFiscal::getNombre, "Seleccione tipo Fiscal");
         //Configuramos el texto que se muestra por defecto en el combobox jornada
         elementoJornada.setPromptText("Seleccione una jornada");
         //Cargamos las jornadas
         cargarJornadas();
+        construirComBox(elementoJornada, Jornada::getTipoJornada, "Seleccione una jornada");
         //Elementos y listado donde vota el fiscal
         elementoEstablecimientoVota.setPromptText("Donde vota el fiscal");
         cargarEstablecimientoVota();
+        construirComBox(elementoEstablecimientoVota, Establecimiento::getNombreEstablecimiento, "Donde vota el fiscal");
         //Cargamos los ficales en la tabla
         tablaFiscales.setItems(listaFiscales);
         cargarFiscalesTabla();
@@ -609,7 +621,6 @@ public class FiscalesABMConrtoller {
                 return lista;
             }
         };
-        //tarea.setOnSucceeded(event -> tablaFiscales.getItems().setAll(tarea.getValue()));
         tarea.setOnSucceeded(event -> {
             listaFiscales.setAll(tarea.getValue());
             //Ordenamos la lista de fiscales
@@ -646,6 +657,7 @@ public class FiscalesABMConrtoller {
         elementoEstablecimientoVota.getSelectionModel().clearSelection();
         elementoTipoDepartamento.getSelectionModel().clearSelection();
         elementoTipoPisoFiscal.getSelectionModel().clearSelection();
+        elementoJornada.getSelectionModel().clearSelection();
         chkActivoFiscal.setSelected(true);
     }
 
@@ -711,6 +723,34 @@ public class FiscalesABMConrtoller {
         new Thread(tarea).start();
     }
 
+    private <T> Comparator<T> ordenarListas(Function<T, String> mapper) {
+        return Comparator.comparing(t -> normalizar(mapper.apply(t)),
+                String.CASE_INSENSITIVE_ORDER);
+    }
+
+    private String normalizar(String texto) {
+        if (texto == null) return "";
+        String nfd = java.text.Normalizer.normalize(texto, Normalizer.Form.NFD);
+        return nfd.replaceAll("\\p{M}", ""); // elimina diacríticos (acentos)
+    }
+
+    private <T> void construirComBox(ComboBox<T> combo, Function<T, String> toStringMapper, String texto) {
+        combo.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : toStringMapper.apply(item));
+            }
+        });
+        combo.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(!empty && item != null ? toStringMapper.apply(item) : texto);
+            }
+        });
+    }
+
     //
     private void cargarCalles() {
         Task<List<Calle>> tarea = new Task<List<Calle>>() {
@@ -750,7 +790,10 @@ public class FiscalesABMConrtoller {
                 return estServicio.listarEstablecimientos();
             }
         };
-        tareaEst.setOnSucceeded(evento -> elementoEstablecimientoVota.getItems().setAll(tareaEst.getValue()));
+        tareaEst.setOnSucceeded(evento -> {
+            List<Establecimiento> lista = tareaEst.getValue();
+            elementoEstablecimientoVota.getItems().setAll(lista.stream().sorted(ordenarListas(Establecimiento::getNombreEstablecimiento)).toList());
+        });
         tareaEst.setOnFailed(event -> mostrarAlerta("Error", "No se pudieron cargar los establecimientos" + tareaEst.getException(), Alert.AlertType.ERROR));
         new Thread(tareaEst).start();
     }

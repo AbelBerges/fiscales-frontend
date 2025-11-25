@@ -77,6 +77,34 @@ public class EstablecimientoServicio {
         }
     }
 
+    public List<Establecimiento> listarEstablecimientosSinMesa() throws IOException, InterruptedException {
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(URL_BASE + "/buscar-establecimiento-sin-mesas"))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            List<EstablecimientoResponseDTO> dto = mapeo.readValue(respuesta.body(), new TypeReference<List<EstablecimientoResponseDTO>>() {});
+            return dto.stream().map(EstablecimientoMapper::aEntidadModelo).toList();
+        } else {
+            throw new IOException("Error al recuperar los establecimientos sin mesa");
+        }
+    }
+
+    public List<Establecimiento> listarEstablecimientosConMesas() throws IOException, InterruptedException {
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(URL_BASE + "/buscar-establecimiento-con-mesas"))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            List<EstablecimientoResponseDTO> dto = mapeo.readValue(respuesta.body(), new TypeReference<List<EstablecimientoResponseDTO>>() {});
+            return dto.stream().map(EstablecimientoMapper::aEntidadModelo).toList();
+        } else {
+            throw new IOException("No se pudo recuperar los establecimientos con mesas asignadas");
+        }
+    }
+
     public EstablecimientoResponseDTO buscarPorId(Integer elId) throws IOException, InterruptedException{
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE + "/" + elId))

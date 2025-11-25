@@ -15,10 +15,12 @@ import org.desarrollo.fiscalesfrontend.mapper.EstablecimientoMapper;
 import org.desarrollo.fiscalesfrontend.model.*;
 import org.desarrollo.fiscalesfrontend.service.*;
 
+import java.text.Normalizer;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Function;
 
 public class EstablecimientoABMController {
 
@@ -126,12 +128,15 @@ public class EstablecimientoABMController {
         //Configuramos el inicio del combobox tipo de establecimiento
         tipoEstablecimiento.setPromptText("Seleccione un tipo");
         cargarTipoEstablecimiento();
+        construirComobox(tipoEstablecimiento, TipoEstablecimiento::getTipo, "Seleccione un tipo");
         //Configuramos el inicio del combobox Piso
         tipoPisoEstablecimiento.setPromptText("Seleccione un Piso");
         cargarTipoPisos();
+        construirComobox(tipoPisoEstablecimiento, TipoPiso::getNombre, "Seleccione un Piso");
         //Configuramos el inicio del combobox de Departamento
         tipoDepartamentoEstablecimiento.setPromptText("Seleccione un Dpto");
         cargarTipoDepartamentos();
+        construirComobox(tipoDepartamentoEstablecimiento, TipoDepartamento::getNombre, "Seleccione un Dpto");
         //Cargamos la lista de calles
         txtCalle.setDisable(true);
         cargarCalles();
@@ -543,9 +548,23 @@ public class EstablecimientoABMController {
             }
         };
 
-        tarea.setOnSucceeded(evento -> tipoEstablecimiento.getItems().setAll(tarea.getValue()));
+        tarea.setOnSucceeded(evento -> {
+            List<TipoEstablecimiento> lista = tarea.getValue();
+            tipoEstablecimiento.getItems().setAll(lista.stream().sorted(ordenarLista(TipoEstablecimiento::getTipo)).toList());
+        });
         tarea.setOnFailed(evento -> mostrarMensaje("Error", "No se pudo recuperar la lista de tipos de establecimientos", Alert.AlertType.ERROR));
         new Thread(tarea).start();
+    }
+
+    private <T> Comparator<T> ordenarLista (Function<T,String> mapper) {
+        return Comparator.comparing(t -> normalizar(mapper.apply(t)),
+                String.CASE_INSENSITIVE_ORDER);
+    }
+
+    private String normalizar(String texto) {
+        if (texto == null) return "";
+        String nfd = java.text.Normalizer.normalize(texto, Normalizer.Form.NFD);
+        return nfd.replaceAll("\\p{M}", ""); // elimina diacríticos (acentos)
     }
 
     private void cargarTipoDepartamentos() {
@@ -573,8 +592,22 @@ public class EstablecimientoABMController {
         new Thread(tarea).start();
     }
 
-
-
+    private <T> void construirComobox(ComboBox<T> combo, Function<T, String> toStringMapper, String texto) {
+        combo.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : toStringMapper.apply(item));
+            }
+        });
+        combo.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(!empty && item != null ? toStringMapper.apply(item) : texto);
+            }
+        });
+    }
 
 
     private void mostrarMensaje(String titulo, String msg, Alert.AlertType tipo) {
