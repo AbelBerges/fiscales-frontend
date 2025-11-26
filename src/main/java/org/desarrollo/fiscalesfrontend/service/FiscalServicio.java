@@ -97,6 +97,19 @@ public class FiscalServicio {
         }
     }
 
+    public Fiscal buscoPorId(Integer idFiscal) throws IOException, InterruptedException {
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(URL_BASE + "/" + idFiscal))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            return FiscalMapper.aFiscalDeResponseDTO(mapeo.readValue(respuesta.body(), FiscalResponseDTO.class));
+        } else {
+            throw new IOException("No se pudo recuperar el fiscal con su ID");
+        }
+    }
+
     public void asignoFiscalGeneral(Integer idFiscal, Integer idEstablecimiento) throws IOException, InterruptedException {
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE  + "/" + idFiscal +"/asignar/" + idEstablecimiento))
@@ -129,6 +142,17 @@ public class FiscalServicio {
         HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
         if (respuesta.statusCode() != 200) {
             throw new IOException("No se pudo desasignar el fiscal a la mesa ");
+        }
+    }
+
+    public void desasignarFiscalGeneral(Integer idFiscal) throws IOException, InterruptedException {
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(URL_BASE + "/desasignar-fiscal-general/" + idFiscal))
+                .PUT(HttpRequest.BodyPublishers.noBody())
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() != 200) {
+            throw new IOException("No se pudo desasignar el fiscal general");
         }
     }
 

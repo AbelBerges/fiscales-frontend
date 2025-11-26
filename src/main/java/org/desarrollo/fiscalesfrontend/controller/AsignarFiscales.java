@@ -34,6 +34,7 @@ public class AsignarFiscales {
     @FXML private ComboBox<Fiscal> comboBoxFiscalGeneral;
     @FXML private FlowPane contenedorMesas;
     @FXML private ScrollPane scrollMesas;
+    @FXML private HBox contenerFiscalGeneral;
     @FXML private Button btnGuardarFiscales, btnActAsignacionFiscales, btnCancelar, btnGuardarFiscalGeneral;
     @FXML private Label msjexito, valorID, etiquetaId, generales;
 
@@ -52,6 +53,8 @@ public class AsignarFiscales {
     private ObservableList<Fiscal> fiscalesJornadaManana = FXCollections.observableArrayList();
     private ObservableList<Fiscal> fiscalesJornadaTarde = FXCollections.observableArrayList();
     private ObservableList<Fiscal> fiscalesJornadaCompleta = FXCollections.observableArrayList();
+    private ObservableList<Fiscal> fiscalesGenerales = FXCollections.observableArrayList();
+    private ObservableList<Fiscal> fiscalesGeneralesCombo = FXCollections.observableArrayList();
 
     @FXML
     private void initialize() {
@@ -76,10 +79,10 @@ public class AsignarFiscales {
             @Override
             protected void updateItem(Fiscal item, boolean vacio) {
                 super.updateItem(item, vacio);
-                setText(!vacio || item != null ? item.getNombreFiscal() + ", " + item.getApellidoFiscal() : null);
+                setText(!vacio || item != null ? item.getNombreFiscal() + ", " + item.getApellidoFiscal() : "Seleccione un Fiscal General");
             }
         });
-        buscarPorNombreTipoFiscal();
+        //cargarComboFiscalesGenerales();
 
         comboBoxEstablecimiento.valueProperty().addListener((obs, ov,nv) -> {
             cargarMesasPorEstablecimiento(nv.getIdEstablecimiento());
@@ -98,10 +101,15 @@ public class AsignarFiscales {
             }
         };
         tarea.setOnSucceeded(evento -> {
-            String texto = generales.getText();
-            texto += comboBoxFiscalGeneral.getValue().getApellidoFiscal();
-            generales.setText(texto);
-            buscarPorNombreTipoFiscal();
+            try {
+                Fiscal f = fiscalServicio.buscoPorId(comboBoxFiscalGeneral.getValue().getIdFiscal());
+                HBox fila = agregarCeldaFiscalGeneral(f, contenerFiscalGeneral);
+                contenerFiscalGeneral.getChildren().add(fila);
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            cargarComboFiscalesGenerales();
         });
         tarea.setOnFailed(evento ->
                 mostrarMensaje("Error", "No se pudo asignar el fiscal " +
@@ -110,7 +118,7 @@ public class AsignarFiscales {
 
     }
 
-    private void buscarPorNombreTipoFiscal() {
+    private void cargarComboFiscalesGenerales() {
         Task<List<Fiscal>> tarea = new Task<List<Fiscal>>() {
             @Override
             protected List<Fiscal> call() throws Exception {
@@ -120,7 +128,10 @@ public class AsignarFiscales {
             }
         };
         tarea.setOnSucceeded(evento -> {
-            comboBoxFiscalGeneral.getItems().setAll(tarea.getValue());
+            List<Fiscal> lista = new ArrayList<>(tarea.getValue());
+            lista.sort(getComparatorAlfabetico());
+            fiscalesGeneralesCombo = FXCollections.observableArrayList(lista);
+            comboBoxFiscalGeneral.setItems(fiscalesGeneralesCombo);
         });
         tarea.setOnFailed( evento ->
                 mostrarMensaje("Error", "No se pudo recuperar la lista de Fiscales con un tipo determinado", Alert.AlertType.ERROR));
@@ -131,7 +142,7 @@ public class AsignarFiscales {
     private void cargarMesasPorEstablecimiento(Integer elId) {
         limpiarFormulario();
         try {
-            //Buscamos si hay fiscales generales
+            contenerFiscalGeneral.setPadding(new Insets(0, 5, 0, 5));
             Task<List<Fiscal>> tarea = new Task<List<Fiscal>>() {
                 @Override
                 protected List<Fiscal> call() throws Exception {
@@ -139,13 +150,15 @@ public class AsignarFiscales {
                 }
             };
             tarea.setOnSucceeded(evento -> {
+                cargarComboFiscalesGenerales();
                 if (!tarea.getValue().isEmpty() || tarea.getValue() != null) {
-                    generales.setText(tarea.getValue()
-                            .stream()
-                            .map(Fiscal::getApellidoFiscal)
-                            .collect(Collectors.joining(", ")));
-                } else {
-                    generales.setText("Ninguno");
+                    List<Fiscal> existen = new ArrayList<>(tarea.getValue());
+                    existen.sort(getComparatorAlfabetico());
+                    fiscalesGenerales = FXCollections.observableArrayList(existen);
+                    for (Fiscal f : existen) {
+                        HBox fila = agregarCeldaFiscalGeneral(f, contenerFiscalGeneral);
+                        contenerFiscalGeneral.getChildren().add(fila);
+                    }
                 }
             });
             tarea.setOnFailed(evento ->
@@ -174,7 +187,7 @@ public class AsignarFiscales {
                     return null;
                 }
             };
-            armarMesas.setOnSucceeded(evento -> System.out.println("se cargaron las mesas"));
+            //armarMesas.setOnSucceeded(evento -> System.out.println("se cargaron las mesas"));
             armarMesas.setOnFailed(evento -> {
                 Throwable ex = armarMesas.getException();
                 ex.printStackTrace();
@@ -274,8 +287,8 @@ public class AsignarFiscales {
         if (esVacia) {
             animarCambio(contenedorMesa);
             contenedorMesa.setStyle(
-                    "-fx-background-color: #40b34014;" +
-                    "-fx-border-color: #BDBDBD;" +
+                    "-fx-background-color: rgba(167, 167, 167, 0.478);" +
+                    "-fx-border-color: rgb(189, 189, 189);" +
                     "-fx-border-width: 1;" +
                     "-fx-border-radius: 6;" +
                     "-fx-background-radius: 6;"
@@ -288,9 +301,9 @@ public class AsignarFiscales {
             // estilo verde
             animarCambio(contenedorMesa);
             contenedorMesa.setStyle(
-                    "-fx-background-color: rgba(138,223,138,0.22);" +
-                    "-fx-border-color: rgba(103, 192, 103, 0.500);" +
-                    "-fx-border-width: 3;" +
+                    "-fx-background-color: rgb(152, 168, 134, 0.356);" +
+                    "-fx-border-color: rgba(94, 168, 94, 0.781);" +
+                    "-fx-border-width: 1;" +
                     "-fx-border-radius: 6;" +
                     "-fx-background-radius: 6;"
             );
@@ -303,8 +316,8 @@ public class AsignarFiscales {
             animarCambio(contenedorMesa);
             contenedorMesa.setStyle(
                     "-fx-border-color: #ecb669;" +
-                    "-fx-border-width: 3;" +
-                    "-fx-background-color: rgba(214,155,100,0.12);" +   // equivalente a #d69b6414
+                    "-fx-border-width: 1;" +
+                    "-fx-background-color: rgba(196, 166, 157, 0.356);" +
                     "-fx-border-radius: 6;" +
                     "-fx-background-radius: 6;"
             );
@@ -332,10 +345,112 @@ public class AsignarFiscales {
         ft.play();
     }
 
+    private HBox agregarCeldaFiscalGeneral(Fiscal fiscal, HBox contenerFiscalGeneral) {
+        HBox contenedor = new HBox(5);
+        contenedor.setAlignment(Pos.CENTER_LEFT);
+        contenedor.setPadding(new Insets(5));
+        //Aplicamos un poco de diseño a contenedor
+        contenedor.setStyle(
+                "-fx-background-color: white;" +
+                "-fx-background-radius: 6;" +
+                "-fx-border-color: #cccccc;" +
+                "-fx-border-radius: 6;" +
+                "-fx-border-width: 1;" +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0.1, 0, 1);"
+        );
+
+        //Efecto hover manual
+        contenedor.setOnMouseEntered(e -> {
+            contenedor.setStyle(
+                    "-fx-background-color: rgb(223, 223, 223);" +
+                    "-fx-background-radius: 10;" +
+                    "-fx-border-color: #d0d0d0;" +
+                    "-fx-border-radius: 10;" +
+                    "-fx-border-width: 1;" +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 6, 0.2, 0, 2);"
+            );
+        });
+        //Cuando sale del hover
+        contenedor.setOnMouseExited(e -> {
+            contenedor.setStyle(
+                    "-fx-background-color: white;" +
+                    "-fx-background-radius: 10;" +
+                    "-fx-border-color: #e0e0e0;" +
+                    "-fx-border-radius: 10;" +
+                    "-fx-border-width: 1;" +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0.1, 0, 1);"
+            );
+        });
+
+        Label nombre = new Label(fiscal.getApellidoFiscal());
+        nombre.setStyle(
+                "-fx-font-size: 14px;" +
+                "-fx-font-weight: bold;" +
+                "-fx-text-fill: #333333;"
+        );
+        nombre.setMinWidth(80);
+        Button btnQuitarfiscal = new Button("\uD83D\uDDD1");
+        btnQuitarfiscal.setStyle(
+                "-fx-background-color: rgb(255, 134, 134);" +
+                "-fx-text-fill: white;" +
+                "-fx-padding: 5 10;" +
+                "-fx-background-radius: 8;" +
+                "-fx-font-size: 12px;"
+        );
+        // Hover del botón
+        btnQuitarfiscal.setOnMouseEntered(e ->
+                btnQuitarfiscal.setStyle(
+                        "-fx-background-color: #e64949;" +
+                                "-fx-text-fill: white;" +
+                                "-fx-padding: 5 10;" +
+                                "-fx-background-radius: 8;" +
+                                "-fx-font-size: 12px;"
+                )
+        );
+
+        btnQuitarfiscal.setOnMouseExited(e ->
+                btnQuitarfiscal.setStyle(
+                        "-fx-background-color: rgb(255, 134, 134);" +
+                                "-fx-text-fill: white;" +
+                                "-fx-padding: 5 10;" +
+                                "-fx-background-radius: 8;" +
+                                "-fx-font-size: 12px;"
+                )
+        );
+
+        btnQuitarfiscal.setOnAction(e -> {
+            boolean exito = liberoFiscalGeneral(fiscal.getIdFiscal());
+            if (!exito) return;
+            contenerFiscalGeneral.getChildren().remove(contenedor);
+            fiscalesGeneralesCombo.add(fiscal);
+        });
+        contenedor.getChildren().addAll(nombre, btnQuitarfiscal);
+        return contenedor;
+    }
+
+    private boolean liberoFiscalGeneral(Integer idFiscal) {
+        Task<Boolean> tarea = new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+                fiscalServicio.desasignarFiscalGeneral(idFiscal);
+                return true;
+            }
+        };
+        tarea.setOnSucceeded(evento -> {
+            System.out.println("Se ha liberado el fiscal general");
+        });
+        tarea.setOnFailed(evento -> {
+            Throwable ex = tarea.getException();
+            ex.printStackTrace();
+            mostrarMensaje("Error", "No se ha podido liberar el fiscal general " + ex.getMessage(), Alert.AlertType.ERROR);
+        });
+        new Thread(tarea).start();
+        return true;
+    }
+
     private void agregarFilaMesa(Mesa mesa) {
         //1) Contenedor principal de la mesa
         VBox contenedorMesa = new VBox(10);
-        //contenedorMesa.setStyle("-fx-border-color: #ccc; -fx-border-radius: 5; -fx-background-color: #f9f9f9;");
         contenedorMesa.setAlignment(Pos.TOP_LEFT);
         contenedorMesa.setPadding(new Insets(10));
         contenedorMesa.setPrefWidth(380);
@@ -345,13 +460,13 @@ public class AsignarFiscales {
         //Declaramos los comboBox
         ComboBox<Fiscal> comboCompleta = new ComboBox<>();
         comboCompleta.setPromptText("Seleccionar");
-        construirComboBox(comboCompleta);
+        construirComboBox(comboCompleta, "Seleccionar");
         ComboBox<Fiscal> comboManana = new ComboBox<>();
         comboManana.setPromptText("Seleccionar");
-        construirComboBox(comboManana);
+        construirComboBox(comboManana, "Seleccionar");
         ComboBox<Fiscal> comboTarde = new ComboBox<>();
         comboTarde.setPromptText("Seleccionar");
-        construirComboBox(comboTarde);
+        construirComboBox(comboTarde, "Seleccionar");
 
         //Declaramos los botones para cada comboBox
         Button btnAsignarCompleto = new Button("Asignar");
@@ -382,7 +497,6 @@ public class AsignarFiscales {
                             jornadaServicio.buscarPorId(f1.getJornada().getIdJornada()));
                     Jornada j2 = JornadaMapper.aEntidadCompleta(
                             jornadaServicio.buscarPorId(f2.getJornada().getIdJornada()));
-                    //return orden.get(j1.getTipoJornada()) - orden.get(j2.getTipoJornada());
                     Integer o1 = orden.get(j1.getTipoJornada());
                     Integer o2 = orden.get(j2.getTipoJornada());
                     if (o1 == null) o1 = 98;
@@ -392,10 +506,14 @@ public class AsignarFiscales {
                     return 0;
                 }
             });
-            for (Fiscal f: existentes) {
-                Jornada jornada = JornadaMapper.aEntidadCompleta(jornadaServicio.buscarPorId(f.getJornada().getIdJornada()));
-                HBox fila = crearFilaFiscal(f, mesa, contenedorFiscales, jornada, filaCompleta, filaManana, filaTarde, contenedorMesa);
-                contenedorFiscales.getChildren().add(fila);
+            if (!existentes.isEmpty()) {
+                for (Fiscal f: existentes) {
+                    Jornada jornada = JornadaMapper.aEntidadCompleta(jornadaServicio.buscarPorId(f.getJornada().getIdJornada()));
+                    HBox fila = crearFilaFiscal(f, mesa, contenedorFiscales, jornada, filaCompleta, filaManana, filaTarde, contenedorMesa);
+                    contenedorFiscales.getChildren().add(fila);
+                    actualizarEstadoMesa(contenedorMesa, contenedorFiscales, filaCompleta, filaManana, filaTarde);
+                }
+            } else {
                 actualizarEstadoMesa(contenedorMesa, contenedorFiscales, filaCompleta, filaManana, filaTarde);
             }
 
@@ -494,8 +612,35 @@ public class AsignarFiscales {
         Label lblFiscal = new Label(fiscal.getApellidoFiscal());
         lblFiscal.setMinWidth(120);
         Label lblJornada = crearLabelJornada(jornada);
-        Button btnQuitar = new Button("Quitar");
+        Button btnQuitar = new Button("\uD83D\uDDD1");
+        btnQuitar.setStyle(
+                "-fx-background-color: rgb(255, 134, 134);" +
+                        "-fx-text-fill: white;" +
+                        "-fx-padding: 3 10;" +
+                        "-fx-background-radius: 8;" +
+                        "-fx-font-size: 12px;"
+        );
 
+        // Hover del botón
+        btnQuitar.setOnMouseEntered(e ->
+                btnQuitar.setStyle(
+                        "-fx-background-color: rgb(255, 43, 43);" +
+                                "-fx-text-fill: white;" +
+                                "-fx-padding: 3 10;" +
+                                "-fx-background-radius: 8;" +
+                                "-fx-font-size: 12px;"
+                )
+        );
+
+        btnQuitar.setOnMouseExited(e ->
+                btnQuitar.setStyle(
+                        "-fx-background-color: rgb(255, 134, 134);" +
+                                "-fx-text-fill: white;" +
+                                "-fx-padding: 3 10;" +
+                                "-fx-background-radius: 8;" +
+                                "-fx-font-size: 12px;"
+                )
+        );
         fila.setUserData(fiscal);
 
         btnQuitar.setOnAction(e -> {
@@ -570,7 +715,7 @@ public class AsignarFiscales {
         return tarea;
     }
 
-    private void construirComboBox(ComboBox<Fiscal> combo) {
+    private void construirComboBox(ComboBox<Fiscal> combo, String msj) {
         combo.setCellFactory(lv -> new ListCell<>(){
             @Override
             protected void updateItem(Fiscal item, boolean vacio) {
@@ -583,7 +728,7 @@ public class AsignarFiscales {
             @Override
             protected void updateItem(Fiscal item, boolean vacio) {
                 super.updateItem(item, vacio);
-                setText(!vacio || item != null ? item.getApellidoFiscal() + ", " + item.getNombreFiscal() : null);
+                setText(!vacio || item != null ? item.getApellidoFiscal() + ", " + item.getNombreFiscal() : msj);
             }
         });
 
@@ -620,7 +765,8 @@ public class AsignarFiscales {
 
     private void limpiarFormulario() {
         mesasSeleccionadas.clear();
-        generales.setText("");
+        //generales.setText("");
+        contenerFiscalGeneral.getChildren().clear();
         //comboBoxFiscalGeneral.getSelectionModel().clearSelection();
         contenedorMesas.getChildren().clear();
     }

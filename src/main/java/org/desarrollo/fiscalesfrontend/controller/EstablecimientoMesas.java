@@ -253,7 +253,8 @@ public class EstablecimientoMesas {
                     paraTabla.setNombre(nomEst);
                     paraTabla.setCantidadMesas(dto.numerosMesa().size());
                     paraTabla.setMesaInicial(dto.numerosMesa().getFirst());
-                    paraTabla.setMesaFinal(dto.numerosMesa().get(dto.numerosMesa().size() -1));
+                    //paraTabla.setMesaFinal(dto.numerosMesa().get(dto.numerosMesa().size() -1));
+                    paraTabla.setMesaFinal(dto.numerosMesa().getLast());
                     return paraTabla;
                 }
             };
@@ -272,7 +273,7 @@ public class EstablecimientoMesas {
                 limpiarCampos();
             });
             enriquecer.setOnFailed(event ->
-                    mostarAlerta("Error", "No se pudo cargar el registro a la tabla", Alert.AlertType.ERROR));
+                    mostarAlerta("Error", "No se pudo cargar el registro a la tabla " + tarea.getException().getMessage(), Alert.AlertType.ERROR));
             new Thread(enriquecer).start();
 
         });
@@ -304,7 +305,8 @@ public class EstablecimientoMesas {
                 @Override
                 protected EstablecimientoMesasDTO call() throws Exception {
                     List<Integer> lista = dto.numerosMesa();
-                    String nombre = comboEstablecimientos.getValue().getNombreEstablecimiento();
+                    //String nombre = comboEstablecimientos.getValue().getNombreEstablecimiento();
+                    String nombre = nombreEstablecimiento.getText();
                     EstablecimientoMesasDTO temp = new EstablecimientoMesasDTO();
                     temp.setIdEstablecimiento(dto.idEstablecimiento());
                     temp.setNombre(nombre);

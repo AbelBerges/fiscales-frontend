@@ -28,8 +28,10 @@
                         <Label text="Fiscal General" GridPane.columnIndex="2" GridPane.rowIndex="0"> </Label>
                         <ComboBox fx:id="comboBoxFiscalGeneral" GridPane.columnIndex="3" GridPane.rowIndex="0"> </ComboBox>
                         <Button fx:id="btnGuardarFiscalGeneral" onAction="#guardarFiscalGeneral" text="Asignar" GridPane.columnIndex="4" GridPane.rowIndex="0"> </Button>
-                        <Label text="Fiscal/les Generales" GridPane.columnIndex="5" GridPane.rowIndex="0"> </Label>
+                        <HBox fx:id="contenerFiscalGeneral" GridPane.columnIndex="5" GridPane.rowIndex="0"> </HBox>
+                        <!--<Label text="Fiscal/les Generales" GridPane.columnIndex="5" GridPane.rowIndex="0"> </Label>
                         <Label fx:id="generales" GridPane.columnIndex="6" GridPane.rowIndex="0"> </Label>
+                        -->
                         <Label text=" " GridPane.columnIndex="0" GridPane.rowIndex="1"> <font>
                             <Font size="11.0" />
                         </font> </Label>
