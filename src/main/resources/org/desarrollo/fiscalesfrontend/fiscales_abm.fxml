@@ -145,7 +145,7 @@
                 <ComboBox fx:id="tipoFiscalBusqueda" styleClass="combo-filtro"> </ComboBox>
                 <CheckBox fx:id="chkBusquedaJornada" text="Jornada" styleClass="check-filtro"> </CheckBox>
                 <ComboBox fx:id="jornadaBusqueda" styleClass="combo-filtro"> </ComboBox>
-                <CheckBox fx:id="chkPorApellido" text="Apellido" styleClass="radio-filtro"> </CheckBox>
+                <CheckBox fx:id="chkPorApellido" text="Apellido" styleClass="radio-filtro" onAction="#cargarFiscalesBusqueda"> </CheckBox>
                 <TextField fx:id="apellidoBusqueda" styleClass="text-filtro"> </TextField>
                 <CheckBox text="Activo" fx:id="chkFiscalActivoBusqueda" selected="true" styleClass="check-filtro"> </CheckBox>
                 <Button fx:id="btnBusquedaFiltros" text="Buscar" onAction="#opcionesBusquedaPorFiltro"> </Button>

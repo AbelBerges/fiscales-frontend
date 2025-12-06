@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.text.Normalizer;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class FiscalesABMConrtoller {
@@ -828,6 +829,33 @@ public class FiscalesABMConrtoller {
         });
     }
 
+    @FXML
+    private void cargarFiscalesBusqueda() {
+        listaFiscales.clear();
+        Task<List<Fiscal>> tarea = new Task<List<Fiscal>>() {
+            @Override
+            protected List<Fiscal> call() throws Exception {
+                return servicio.listarFiscales();
+            }
+        };
+        tarea.setOnSucceeded(evento -> {
+            listaFiscales.addAll(tarea.getValue());
+            Platform.runLater(() -> {
+                if (apellidoBusqueda != null) {
+                    configurarAutocompletar(apellidoBusqueda, listaFiscales, Fiscal::getApellidoFiscal, f -> apellidoBusqueda.setText(f.getApellidoFiscal()));
+                    apellidoBusqueda.setDisable(false);
+                } else {
+                    mostrarAlerta("Error", "El campo de búsqueda del fiscal está vacío", Alert.AlertType.ERROR);
+                }
+            });
+        });
+        tarea.setOnFailed(evento -> {
+            Throwable ex = tarea.getException();
+            ex.printStackTrace();
+            mostrarAlerta("Error", "No se pudo recuperar la lista de fiscales para la búsqueda", Alert.AlertType.ERROR);
+        });
+        new Thread(tarea).start();
+    }
 
 
     //
@@ -859,6 +887,63 @@ public class FiscalesABMConrtoller {
             mostrarAlerta("Error", "No se pude cargar la lista de calles" + ex.getMessage(), Alert.AlertType.ERROR);
         });
         new Thread(tarea).start();
+    }
+
+    /*private void configurarAutoCompletarFiscal( TextField campoBuscarCalle, List<Fiscal> listado) {
+        if (campoBuscarCalle == null || listado == null) {
+            mostrarAlerta("Error", "El campo de búsqueda de apellido de fiscal está vacía", Alert.AlertType.ERROR);
+            return;
+        }
+        //Armamos el context menu para mostrar los fiscales
+        ContextMenu sugern
+    }*/
+
+    private <T> void configurarAutocompletar(TextField campoBusqueda, List<T> listado, Function<T, String> extractor, Consumer<T> onSelect) {
+        if (campoBusqueda == null || listado == null || extractor == null) {
+            mostrarAlerta("Error", "El campo o la lista está vacía ", Alert.AlertType.ERROR);
+            return;
+        }
+        ContextMenu menu = new ContextMenu();
+        campoBusqueda.textProperty().addListener((obs, ov, nv) -> {
+            menu.getItems().clear();
+            if (nv == null || nv.isBlank()) {
+                menu.hide();
+                return;
+            }
+            String texto = nv.toUpperCase(Locale.ROOT);
+            List<T> coincidencias = listado.stream()
+                    .filter(e -> {
+                       String valor = extractor.apply(e);
+                       return valor != null && valor.toUpperCase(Locale.ROOT).contains(texto);
+                    })
+                    .limit(10)
+                    .toList();
+            if (coincidencias.isEmpty()) {
+                menu.hide();
+                return;
+            }
+            for (T elemento : coincidencias) {
+                String mostrar = extractor.apply(elemento);
+                MenuItem item = new MenuItem(mostrar);
+                item.setOnAction(a -> {
+                    onSelect.accept(elemento);
+                    menu.hide();
+                });
+                menu.getItems().add(item);
+            }
+        });
+        //Chequeamos si se pierde el foco
+        campoBusqueda.focusedProperty().addListener((obs, ov, nv) -> {
+            if (!nv) {
+                String texto = campoBusqueda.getText();
+                boolean existe = listado.stream()
+                        .anyMatch(e -> extractor.apply(e).equalsIgnoreCase(texto));
+                if (!existe) {
+                    campoBusqueda.clear();
+                }
+            }
+        });
+
     }
 
     //Este método es pora completar las calles del método cargarCalles()
