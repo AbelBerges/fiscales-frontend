@@ -80,9 +80,10 @@ public class FiscalesABMConrtoller {
 
     private ObservableList<Fiscal> listaFiscales = FXCollections.observableArrayList();
     private SortedList<Fiscal> listaOrdenada;
+    private List<Fiscal> listaBusqueda = new ArrayList<>();
     //Elementos necesarios para la búsqueda de calles.
     private List<Calle> listaCalles;
-    private  List<Mesa> listaMesa;
+    private List<Mesa> listaMesa;
     private List<Establecimiento> lstEstablecimientos;
 
     @FXML
@@ -831,7 +832,7 @@ public class FiscalesABMConrtoller {
 
     @FXML
     private void cargarFiscalesBusqueda() {
-        listaFiscales.clear();
+        //listaFiscales.clear();
         Task<List<Fiscal>> tarea = new Task<List<Fiscal>>() {
             @Override
             protected List<Fiscal> call() throws Exception {
@@ -839,14 +840,12 @@ public class FiscalesABMConrtoller {
             }
         };
         tarea.setOnSucceeded(evento -> {
-            listaFiscales.addAll(tarea.getValue());
+            listaBusqueda.addAll(tarea.getValue());
             Platform.runLater(() -> {
-                if (apellidoBusqueda != null) {
-                    configurarAutocompletar(apellidoBusqueda, listaFiscales, Fiscal::getApellidoFiscal, f -> apellidoBusqueda.setText(f.getApellidoFiscal()));
-                    apellidoBusqueda.setDisable(false);
-                } else {
-                    mostrarAlerta("Error", "El campo de búsqueda del fiscal está vacío", Alert.AlertType.ERROR);
-                }
+                configurarAutoCompletarFiscal(apellidoBusqueda, listaBusqueda);
+                /*apellidoBusqueda.textProperty().addListener((obs, ov, nv) -> {
+                    configurarAutoCompletarFiscal(apellidoBusqueda, listaBusqueda);
+                });*/
             });
         });
         tarea.setOnFailed(evento -> {
@@ -889,14 +888,51 @@ public class FiscalesABMConrtoller {
         new Thread(tarea).start();
     }
 
-    /*private void configurarAutoCompletarFiscal( TextField campoBuscarCalle, List<Fiscal> listado) {
-        if (campoBuscarCalle == null || listado == null) {
+    private void configurarAutoCompletarFiscal(TextField campoBuscarFiscal, List<Fiscal> listado) {
+        if (campoBuscarFiscal == null || listado == null) {
             mostrarAlerta("Error", "El campo de búsqueda de apellido de fiscal está vacía", Alert.AlertType.ERROR);
             return;
         }
         //Armamos el context menu para mostrar los fiscales
-        ContextMenu sugern
-    }*/
+        ContextMenu sugerencias = new ContextMenu();
+        campoBuscarFiscal.textProperty().addListener((obs, ov, nv) -> {
+            sugerencias.getItems().clear();
+            if (nv == null || nv.isBlank()) {
+                sugerencias.hide();
+                return;
+            }
+            String texto = nv.toLowerCase(Locale.ROOT);
+            List<Fiscal> coincidencias = listado.stream()
+                    .filter(f -> f.getApellidoFiscal().toLowerCase(Locale.ROOT).contains(texto))
+                    .limit(10)
+                    .toList();
+            if (coincidencias.isEmpty()) {
+                sugerencias.hide();
+                return;
+            }
+            for (Fiscal f : coincidencias) {
+                MenuItem item = new MenuItem(f.getApellidoFiscal());
+                item.setOnAction(a -> {
+                    campoBuscarFiscal.setText(f.getApellidoFiscal());
+                    sugerencias.hide();
+                });
+                sugerencias.getItems().add(item);
+            }
+            if (!sugerencias.isShowing()) {
+                sugerencias.show(campoBuscarFiscal, Side.BOTTOM, 0, 0);
+            }
+        });
+        //Validamos el foco. Permitir valores válidos
+        campoBuscarFiscal.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue) {
+                String texto = campoBuscarFiscal.getText();
+                boolean existe = listado.stream().anyMatch(f -> f.getApellidoFiscal().equalsIgnoreCase(texto));
+                if (!existe) {
+                    campoBuscarFiscal.clear();
+                }
+            }
+        });
+    }
 
     private <T> void configurarAutocompletar(TextField campoBusqueda, List<T> listado, Function<T, String> extractor, Consumer<T> onSelect) {
         if (campoBusqueda == null || listado == null || extractor == null) {
