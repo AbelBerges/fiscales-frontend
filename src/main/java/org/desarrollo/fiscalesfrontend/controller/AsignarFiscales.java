@@ -1,18 +1,19 @@
 package org.desarrollo.fiscalesfrontend.controller;
 
-import com.sun.source.tree.TryTree;
+
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
-import javafx.css.PseudoClass;
+
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -26,7 +27,6 @@ import java.io.IOException;
 import java.text.Normalizer;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class AsignarFiscales {
 
@@ -277,52 +277,52 @@ public class AsignarFiscales {
         boolean esVacia = !manana && !tarde && !completa;
         boolean esIncompleta = !esVacia && !esCompleta;
 
-        //Limpiar estilos previos del contenedorMesa
-        try {
-            contenedorMesa.getStyleClass().removeAll("mesa-completa", "mesa-incompleta", "mesa-vacia");
-        } catch (Exception ignored) {}
         //Limpiar de estilo el inline previo
-        contenedorMesa.setStyle("");
+        contenedorMesa.getStyleClass().removeAll("mesa-completa", "mesa-incompleta", "mesa-vacia");
+        if (!contenedorMesa.getStyleClass().contains("mesa")) {
+            contenedorMesa.getStyleClass().add("mesa");
+        }
+            //contenedorMesa.getStyleClass().add("mesa");
+        //contenedorMesa.setStyle("");
         //Aplicar estilo y bloqueos de forma consistente
         if (esVacia) {
-            animarCambio(contenedorMesa);
-            contenedorMesa.setStyle(
+            //animarCambio(contenedorMesa);
+            contenedorMesa.getStyleClass().add("mesa-vacia");
+            /*contenedorMesa.setStyle(
                     "-fx-background-color: rgba(167, 167, 167, 0.478);" +
                     "-fx-border-color: rgb(189, 189, 189);" +
                     "-fx-border-width: 1;" +
                     "-fx-border-radius: 6;" +
                     "-fx-background-radius: 6;"
-            );
-            //flashCompleto(contenedorMesa);
+            );*/
             filaCompleta.setDisable(false);
             filaManana.setDisable(false);
             filaTarde.setDisable(false);
         } else if (esCompleta) {
             // estilo verde
-            animarCambio(contenedorMesa);
-            contenedorMesa.setStyle(
+            //animarCambio(contenedorMesa);
+            contenedorMesa.getStyleClass().add("mesa-completa");
+            /*contenedorMesa.setStyle(
                     "-fx-background-color: rgb(152, 168, 134, 0.356);" +
                     "-fx-border-color: rgba(94, 168, 94, 0.781);" +
                     "-fx-border-width: 1;" +
                     "-fx-border-radius: 6;" +
                     "-fx-background-radius: 6;"
-            );
-            //flashCompleto(contenedorMesa);
-            contenedorMesa.setEffect(new DropShadow(15, Color.rgb(120,170, 120,0.25)));
+            );*/
+            //contenedorMesa.setEffect(new DropShadow(15, Color.rgb(120,170, 120,0.25)));
             filaCompleta.setDisable(true);
             filaManana.setDisable(true);
             filaTarde.setDisable(true);
         } else { //incompleta
-            animarCambio(contenedorMesa);
-            contenedorMesa.setStyle(
+            //animarCambio(contenedorMesa);
+            contenedorMesa.getStyleClass().add("mesa-incompleta");
+            /*contenedorMesa.setStyle(
                     "-fx-border-color: #ecb669;" +
                     "-fx-border-width: 1;" +
                     "-fx-background-color: rgba(196, 166, 157, 0.356);" +
                     "-fx-border-radius: 6;" +
                     "-fx-background-radius: 6;"
-            );
-            //flashCompleto(contenedorMesa);
-            contenedorMesa.setEffect(new DropShadow(15, Color.rgb(200, 140,40, 0.25)));
+            );*/
             filaCompleta.setDisable(false);
             filaManana.setDisable(false);
             filaTarde.setDisable(false);
@@ -334,96 +334,119 @@ public class AsignarFiscales {
                 filaCompleta.setDisable(true);
                 filaTarde.setDisable(true);
             }
-
         }
+        animarCambio(contenedorMesa);
     }
 
     private void animarCambio(Node nodo) {
+        //Eliminamos animaciones activas si las tiene
+        nodo.getProperties().remove("animacionActiva");
+        if (Boolean.TRUE.equals(nodo.getProperties().get("animacionActiva"))) return;
+        nodo.getProperties().put("animacionActiva", true);
+
+        //Escala ligera
+        ScaleTransition escala = new ScaleTransition(Duration.millis(260), nodo);
+        escala.setFromX(1.02);
+        escala.setFromY(1.02);
+        escala.setToX(1.0);
+        escala.setToY(1.0);
+        escala.setInterpolator(Interpolator.EASE_OUT);
+
+        //Dropshadow animada
+        DropShadow ds = new DropShadow();
+        ds.setRadius(0);
+        ds.setOffsetX(0);
+        ds.setOffsetY(2);
+        ds.setColor(Color.rgb(127,126,126,0.20));
+        nodo.setEffect(ds);
+
+        //Animar el radio/offset/opacity del shadow con timeline
+        Timeline shadowAnim = new Timeline(
+                new KeyFrame(Duration.ZERO,
+                        new KeyValue(ds.radiusProperty(), 0),
+                        new KeyValue(ds.spreadProperty(), 0)
+                ),
+                new KeyFrame(Duration.millis(350),
+                        new KeyValue(ds.radiusProperty(), 10, Interpolator.EASE_OUT),
+                        new KeyValue(ds.spreadProperty(), 0.08, Interpolator.EASE_OUT)
+                )
+        );
+        //termina el timeline, vovler suave al estado limpio
+        Timeline limpiar = new Timeline(
+                new KeyFrame(Duration.millis(380), e -> {
+                    nodo.setEffect(null);
+                    nodo.getProperties().put("animacionActiva", false);
+                })
+        );
+
+        //Reproducir: shadow primero + escala en paralelo
+        ParallelTransition pt = new ParallelTransition(escala, shadowAnim);
+        pt.setOnFinished(e -> limpiar.play());
+        pt.play();
+    }
+
+    private void activarHoverSuave(Node nodo) {
+        //Evitar múltiples listeners
+        if (Boolean.TRUE.equals(nodo.getProperties().get("hoverListeners"))) return;
+        nodo.getProperties().put("hoverListeners", true);
+        
+        DropShadow hoverShadow = new DropShadow();
+        hoverShadow.setColor(Color.rgb(127,126,126,0.20));
+        hoverShadow.setRadius(0);
+        hoverShadow.setSpread(0);
+        
+        nodo.setOnMouseEntered(e -> {
+            //Si hay animación en curso, la permitimos
+            Timeline enter = new Timeline(
+                    new KeyFrame(Duration.millis(400),
+                            new KeyValue(hoverShadow.radiusProperty(), 12, Interpolator.EASE_OUT),
+                            new KeyValue(hoverShadow.spreadProperty(), 0.08, Interpolator.EASE_OUT)
+                    )
+            );
+            //nodo.setEffect(hoverShadow);
+            ScaleTransition st = new ScaleTransition(Duration.millis(400), nodo);
+            st.setToX(1.01);
+            st.setToY(1.01);
+            st.setInterpolator(Interpolator.EASE_OUT);
+            new ParallelTransition(st, enter).play();
+        });
+        
+        nodo.setOnMouseExited(e -> {
+            Timeline exit = new Timeline(
+                    new KeyFrame(Duration.millis(180),
+                            new KeyValue(hoverShadow.radiusProperty(), 0, Interpolator.EASE_OUT),
+                            new KeyValue(hoverShadow.spreadProperty(), 0, Interpolator.EASE_OUT)
+                    ),
+                    new KeyFrame(Duration.millis(180), ev -> nodo.setEffect(null))
+            );
+            ScaleTransition st = new ScaleTransition(Duration.millis(180), nodo);
+            st.setToX(1.0);
+            st.setToY(1.0);
+            st.setInterpolator(Interpolator.EASE_IN);
+            new ParallelTransition(st, exit).play();
+        });
+        
+    }
+
+    /*private void animarCambio(Node nodo) {
         FadeTransition ft = new FadeTransition(Duration.millis(350), nodo);
         ft.setFromValue(0.3);
         ft.setToValue(1);
         ft.play();
-    }
+    }*/
 
     private HBox agregarCeldaFiscalGeneral(Fiscal fiscal, HBox contenerFiscalGeneral) {
         HBox contenedor = new HBox(5);
         contenedor.setAlignment(Pos.CENTER_LEFT);
         contenedor.setPadding(new Insets(5));
-        //Aplicamos un poco de diseño a contenedor
-        contenedor.setStyle(
-                "-fx-background-color: white;" +
-                "-fx-background-radius: 6;" +
-                "-fx-border-color: #cccccc;" +
-                "-fx-border-radius: 6;" +
-                "-fx-border-width: 1;" +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0.1, 0, 1);"
-        );
 
-        //Efecto hover manual
-        contenedor.setOnMouseEntered(e -> {
-            contenedor.setStyle(
-                    "-fx-background-color: rgb(223, 223, 223);" +
-                    "-fx-background-radius: 10;" +
-                    "-fx-border-color: #d0d0d0;" +
-                    "-fx-border-radius: 10;" +
-                    "-fx-border-width: 1;" +
-                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 6, 0.2, 0, 2);"
-            );
-        });
-        //Cuando sale del hover
-        contenedor.setOnMouseExited(e -> {
-            contenedor.setStyle(
-                    "-fx-background-color: white;" +
-                    "-fx-background-radius: 10;" +
-                    "-fx-border-color: #e0e0e0;" +
-                    "-fx-border-radius: 10;" +
-                    "-fx-border-width: 1;" +
-                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0.1, 0, 1);"
-            );
-        });
-
+        contenedor.getStyleClass().add("celda-fiscal");
         Label nombre = new Label(fiscal.getApellidoFiscal());
-        nombre.setStyle(
-                "-fx-font-size: 14px;" +
-                "-fx-font-weight: bold;" +
-                "-fx-text-fill: #333333;"
-        );
+        nombre.getStyleClass().add("titulo-seccion");
+
         nombre.setMinWidth(80);
         Button btnQuitarfiscal = new Button("\uD83D\uDDD1");
-        btnQuitarfiscal.setStyle(
-                "-fx-background-color: rgb(255, 134, 134);" +
-                "-fx-text-fill: white;" +
-                "-fx-padding: 5 10;" +
-                "-fx-background-radius: 8;" +
-                "-fx-font-size: 12px;"
-        );
-        // Hover del botón
-        btnQuitarfiscal.setOnMouseEntered(e ->
-                btnQuitarfiscal.setStyle(
-                        "-fx-background-color: #e64949;" +
-                                "-fx-text-fill: white;" +
-                                "-fx-padding: 5 10;" +
-                                "-fx-background-radius: 8;" +
-                                "-fx-font-size: 12px;"
-                )
-        );
-
-        btnQuitarfiscal.setOnMouseExited(e ->
-                btnQuitarfiscal.setStyle(
-                        "-fx-background-color: rgb(255, 134, 134);" +
-                                "-fx-text-fill: white;" +
-                                "-fx-padding: 5 10;" +
-                                "-fx-background-radius: 8;" +
-                                "-fx-font-size: 12px;"
-                )
-        );
-
-        btnQuitarfiscal.setOnAction(e -> {
-            boolean exito = liberoFiscalGeneral(fiscal.getIdFiscal());
-            if (!exito) return;
-            contenerFiscalGeneral.getChildren().remove(contenedor);
-            fiscalesGeneralesCombo.add(fiscal);
-        });
+        btnQuitarfiscal.getStyleClass().add("btn-eliminar");
         contenedor.getChildren().addAll(nombre, btnQuitarfiscal);
         return contenedor;
     }
@@ -454,9 +477,11 @@ public class AsignarFiscales {
         contenedorMesa.setAlignment(Pos.TOP_LEFT);
         contenedorMesa.setPadding(new Insets(10));
         contenedorMesa.setPrefWidth(380);
+        contenedorMesa.getStyleClass().add("mesa");
+        activarHoverSuave(contenedorMesa);
 
         Label titulo = new Label("Mesa: " + mesa.getNumeroMesa());
-        titulo.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
+        //titulo.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
         //Declaramos los comboBox
         ComboBox<Fiscal> comboCompleta = new ComboBox<>();
         comboCompleta.setPromptText("Seleccionar");

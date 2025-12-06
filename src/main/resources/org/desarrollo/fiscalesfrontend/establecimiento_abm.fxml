@@ -35,49 +35,47 @@
                         <ColumnConstraints minWidth="80" />
                         <ColumnConstraints prefWidth="230" />
                     </columnConstraints>
-                    <!-- ############# Fila 1 ############# -->
+
                     <Label text="Nombre" GridPane.columnIndex="0" GridPane.rowIndex="0"> </Label>
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.halignment="RIGHT"/>
                     <TextField fx:id="txtNombreEstablecimiento" GridPane.columnIndex="1" GridPane.rowIndex="0"> </TextField>
                     <Label fx:id="etiquetaID" text="" GridPane.columnIndex="2" GridPane.rowIndex="0" alignment="CENTER_RIGHT"> </Label>
                     <Label fx:id="valorId" text="" GridPane.columnIndex="3" GridPane.rowIndex="0" disable="true"> </Label>
-                    <!-- ############# Fila 2 ############# -->
+
                     <Label text="Decripción" GridPane.columnIndex="0" GridPane.rowIndex="1"> </Label>
                     <TextField fx:id="txtDescripcionEstablecimiento" GridPane.columnIndex="1" GridPane.rowIndex="1"> </TextField>
 
-                    <!-- ############# Fila 3 ############# -->
-                    <Label text="Tipo de Establecimiento" GridPane.columnIndex="0" GridPane.rowIndex="2"> </Label>
+                    <HBox spacing="2" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                        <Label text="Tipo de Establecimiento"> </Label>
+                        <Label text="*" styleClass="requerido"> </Label>
+                    </HBox>
+                    <!--<Label text="Tipo de Establecimiento" GridPane.columnIndex="0" GridPane.rowIndex="2"> </Label>
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.halignment="RIGHT"/>-->
                     <ComboBox fx:id="tipoEstablecimiento" GridPane.columnIndex="1" GridPane.rowIndex="2"> </ComboBox>
 
-                    <!-- ############# Fila 4 #############
-                    <Label text="Cantidad de mesas" GridPane.columnIndex="0" GridPane.rowIndex="3"> </Label>
-                    <TextField fx:id="txtCantidadMesas" GridPane.columnIndex="1" GridPane.rowIndex="3"> </TextField>
-                    -->
 
-                    <!-- ############# Fila 5 ############# -->
-                    <Label text="Domicilio del establecimiento" textFill="#eb6117" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="4">
-                        <font>
-                            <Font size="15.0" />
-                        </font>
-                    </Label>
-                    <!-- ############# Fila 6 ############# -->
+                    <Label text="Domicilio del establecimiento" styleClass="domicilio" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="4"> </Label>
+
                     <Label text="Calle" GridPane.columnIndex="0" GridPane.rowIndex="5"> </Label>
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.halignment="RIGHT"/>
                     <TextField fx:id="txtCalle" promptText="Buscar calle..." GridPane.columnIndex="1" GridPane.rowIndex="5"> </TextField>
 
                     <Label text="Altura" GridPane.columnIndex="2" GridPane.rowIndex="5"> </Label>
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="2" GridPane.rowIndex="5" GridPane.halignment="RIGHT"/>
                     <TextField fx:id="txtAlturaEstablecimiento" GridPane.columnIndex="3" GridPane.rowIndex="5"> </TextField>
 
-                    <!-- ############# Fila 8 ############# -->
+
                     <Label text="Piso" GridPane.columnIndex="0" GridPane.rowIndex="7"> </Label>
                     <ComboBox fx:id="tipoPisoEstablecimiento" GridPane.columnIndex="1" GridPane.rowIndex="7"> </ComboBox>
 
                     <Label text="Dpto" GridPane.columnIndex="2" GridPane.rowIndex="7"> </Label>
                     <ComboBox fx:id="tipoDepartamentoEstablecimiento" GridPane.columnIndex="3" GridPane.rowIndex="7"> </ComboBox>
 
-                    <!-- ############# Fila 10 ############# -->
+
                     <Label text="Activo" GridPane.columnIndex="0" GridPane.rowIndex="8"> </Label>
                     <CheckBox fx:id="activoEstablecimiento" GridPane.columnIndex="1" GridPane.rowIndex="8" selected="true"> </CheckBox>
 
-                    <!-- ############# Fila 11 ############# -->
+
                     <HBox alignment="CENTER_RIGHT" spacing="10" GridPane.columnIndex="0" GridPane.columnSpan="4" GridPane.rowIndex="9">
                         <Button fx:id="btnGuardar" onAction="#guardarEstablecimiento" text="Guardar"> </Button>
                         <Button fx:id="btnActualiazar" text="Actualizar" onAction="#actualizarEstablecimiento"> </Button>

@@ -9,6 +9,7 @@ module org.desarrollo.fiscalesfrontend {
     requires java.desktop;
     requires jdk.compiler;
     requires jdk.httpserver;
+    requires java.sql;
     //requires org.desarrollo.fiscalesfrontend;
 
     opens org.desarrollo.fiscalesfrontend to javafx.fxml;

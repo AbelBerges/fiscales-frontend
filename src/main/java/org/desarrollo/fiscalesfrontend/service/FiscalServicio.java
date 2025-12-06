@@ -10,9 +10,11 @@ import org.desarrollo.fiscalesfrontend.model.Fiscal;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class FiscalServicio {
@@ -43,7 +45,21 @@ public class FiscalServicio {
         } else {
             throw new IOException("Error al listar los fiscales " + respuesta.statusCode());
         }
+    }
 
+    //======================= LISTAR TODOS LOS FISCALES ACTIVOS ==============================
+    public List<Fiscal> listarFiscalesActivos() throws IOException, InterruptedException {
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(URL_BASE + "/fiscales-activos/"))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            List<FiscalResponseDTO> dto = mapeo.readValue(respuesta.body(), new TypeReference<List<FiscalResponseDTO>>() {});
+            return dto.stream().map(FiscalMapper::aFiscalDeResponseDTO).toList();
+        } else {
+            throw new IOException("No se pudo recupera la lista de fiscales activos " + respuesta.statusCode());
+        }
     }
 
     //======================= LISTAR FISCALES POR TIPO DE FISCAL ======================
@@ -97,6 +113,7 @@ public class FiscalServicio {
         }
     }
 
+    //====================== BUSCAMOS UN FISCAL POR ID ================================
     public Fiscal buscoPorId(Integer idFiscal) throws IOException, InterruptedException {
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE + "/" + idFiscal))
@@ -110,6 +127,7 @@ public class FiscalServicio {
         }
     }
 
+    //====================== ASIGNACIÓN DE UN FISCAL GENERAL ================================
     public void asignoFiscalGeneral(Integer idFiscal, Integer idEstablecimiento) throws IOException, InterruptedException {
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE  + "/" + idFiscal +"/asignar/" + idEstablecimiento))
@@ -122,6 +140,7 @@ public class FiscalServicio {
         }
     }
 
+    //====================== ASIGNACIÓN DE FISCALES A UNA MESA ================================
     public void asingarFiscalAUnaMesa(Integer idFiscal, Integer idMesa) throws IOException, InterruptedException {
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE + "/" + idFiscal + "/asignar-fiscal-mesa/" + idMesa))
@@ -134,6 +153,7 @@ public class FiscalServicio {
         }
     }
 
+    //====================== LIBERAR UN FISCAL DE UNA MESA ================================
     public void desasignarUnFiscalAUnaMesa(Integer idFiscal) throws IOException, InterruptedException {
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE + "/desasignar-fiscal-mesa/" + idFiscal))
@@ -145,6 +165,7 @@ public class FiscalServicio {
         }
     }
 
+    //====================== LIBERAR UN FISCAL GENERAL ================================
     public void desasignarFiscalGeneral(Integer idFiscal) throws IOException, InterruptedException {
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE + "/desasignar-fiscal-general/" + idFiscal))
@@ -156,6 +177,7 @@ public class FiscalServicio {
         }
     }
 
+    //====================== LISTA DE FISCALES POR ESTABLECIMIENTO ASIGNADO ================================
     public List<Fiscal> listarPorEstablecimientoAsignado(Integer idEstablecimiento) throws IOException, InterruptedException{
         HttpRequest requeimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE + "/fiscal-establecimiento-asignado/" + idEstablecimiento))
@@ -170,6 +192,7 @@ public class FiscalServicio {
         }
     }
 
+    //====================== LISTAR FISCALES POR TIPO DE FISCAL SIN ESTABLECIMIENTO ASIGNADO ================================
     public List<Fiscal> listarTipoFiscalEstablecimientoNull(Integer idTipoFiscal) throws IOException, InterruptedException{
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE + "/tipo-fiscal-sin-establecimiento/" + idTipoFiscal))
@@ -184,6 +207,7 @@ public class FiscalServicio {
         }
     }
 
+    //====================== LISTAR FISCALES SIN ASIGNACIÓN A UNA MESA ================================
     public List<Fiscal> listaFiscalesTipoFiscalJornadaSinMesa(Integer idTipoFiscal, Integer idJornada) throws IOException, InterruptedException{
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE + "/fiscal-tipo/" + idTipoFiscal + "/jornada/" + idJornada + "/sinmesa/"))
@@ -198,6 +222,7 @@ public class FiscalServicio {
         }
     }
 
+    //====================== BUSCAR FISCAL POR TIPO DE FISCAL Y POR JORNADA ================================
     public FiscalResponseDTO fiscalTipoFiscalJornadaMesa(Integer idTipoFiscal, Integer idJornada,Integer idMesa) throws IOException, InterruptedException {
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE + "/fiscal-tipo/" + idTipoFiscal + "/jornada/" + idJornada + "/" + idMesa))
@@ -215,6 +240,7 @@ public class FiscalServicio {
         }
     }
 
+    //====================== ACTUALIZAMOS UN FISCAL ================================
     public List<Fiscal> recuperarFiscalesSinMesa(Integer idTipoFiscal) throws IOException, InterruptedException {
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE + "/fiscales-comunes-sin-mesa/" + idTipoFiscal))
@@ -229,6 +255,7 @@ public class FiscalServicio {
         }
     }
 
+    //====================== BUSCAR FISCAL POR LA MESA ASIGNADA ================================
     public List<Fiscal> buscoFiscalPorIdMesa(Integer idMesa) throws IOException, InterruptedException{
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE + "/fiscal-por-id-mesa/" + idMesa))
@@ -245,6 +272,7 @@ public class FiscalServicio {
         }
     }
 
+    //====================== LISTAR FISCALES POR TIPO DE FISCAL Y POR ESTABLECIMIENTO ASIGNADO ================================
     public List<Fiscal> listarFiscalesTipoFiscalEstablecimientoAsignado(Integer idTipo, Integer idEstAsignado) throws IOException, InterruptedException {
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE + "/fiscal-tipo/" + idTipo + "/establecimiento-asignado/" + idEstAsignado))
@@ -256,6 +284,46 @@ public class FiscalServicio {
             return lista.stream().map(FiscalMapper::aFiscalDeResponseDTO).toList();
         } else {
             throw new IOException("Error, no se pudo recuperar la lista de fiscales con establecimientos asignados");
+        }
+    }
+
+    //====================== FUNCIÓN PARA MANEJAR LOS FILTROS DE BÚSQUEDA DE FISCALES ================================
+    public List<Fiscal> listarFiscalesParaLasOpcionesDeFiltrado(Integer idTipoFiscal, Integer idJornada, Boolean activo, String apellido) throws IOException, InterruptedException {
+        String url = URL_BASE + "/opciones-buscar";
+        StringBuilder query = new StringBuilder("?");
+        boolean primero = true;
+
+        if (idTipoFiscal != null) {
+            query.append("idTipoFiscal=").append(idTipoFiscal);
+            primero = false;
+        }
+        if (idJornada != null) {
+            if (!primero) query.append("&");
+            query.append("idJornada=").append(idJornada);
+            primero = false;
+        }
+
+        if (activo != null) {
+            if (!primero) query.append("&");
+            query.append("activo=").append(activo);
+            primero = false;
+        }
+
+        if (apellido != null && !apellido.isEmpty()) {
+            if (!primero) query.append("&");
+            query.append("apellido=").append(URLEncoder.encode(apellido, StandardCharsets.UTF_8));
+        }
+
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(url + query))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            List<FiscalResponseDTO> dto = mapeo.readValue(respuesta.body(), new TypeReference<List<FiscalResponseDTO>>() {});
+            return dto.stream().map(FiscalMapper::aFiscalDeResponseDTO).toList();
+        } else {
+            throw new IOException("Error no se pudo recuperar la lista de fiscales por la opción de filtro");
         }
     }
 

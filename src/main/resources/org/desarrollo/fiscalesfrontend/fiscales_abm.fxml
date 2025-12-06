@@ -5,11 +5,10 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -33,75 +32,81 @@
             <HBox alignment="TOP_LEFT" spacing="40">
 
                 <!-- FORMULARIO -->
-                <GridPane fx:id="gridFormulario" hgap="10" vgap="10" minWidth="620">
+                <GridPane fx:id="gridFormulario" hgap="10" minWidth="620" vgap="10">
                     <columnConstraints>
-                        <ColumnConstraints minWidth="80" />
-                        <ColumnConstraints prefWidth="230" hgrow="ALWAYS"/>
-                        <ColumnConstraints minWidth="80" />
-                        <ColumnConstraints prefWidth="230" hgrow="ALWAYS"/>
+                        <ColumnConstraints minWidth="80.0" />
+                        <ColumnConstraints hgrow="ALWAYS" prefWidth="230.0" />
+                        <ColumnConstraints minWidth="80.0" />
+                        <ColumnConstraints hgrow="ALWAYS" prefWidth="230.0" />
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+                  <ColumnConstraints />
                     </columnConstraints>
-                    <!-- agrego el id fila 1-->
+
                     <Label fx:id="etiquetaId" text="" GridPane.columnIndex="0" GridPane.rowIndex="0"> </Label>
                     <Label fx:id="txtValorId" disable="true" text="" GridPane.columnIndex="1" GridPane.rowIndex="0"> </Label>
-                    <!-- Fila 2 -->
+
                     <Label text="Nombre" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                    <TextField fx:id="txtNombreFiscal" GridPane.columnIndex="1" GridPane.rowIndex="1" minWidth="200"/>
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.halignment="RIGHT"/>
+                    <TextField fx:id="txtNombreFiscal" minWidth="200" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                     <Label text="Apellido" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                    <TextField fx:id="txtApellidoFiscal" GridPane.columnIndex="3" GridPane.rowIndex="1" minWidth="200"/>
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.halignment="RIGHT"/>
+                    <TextField fx:id="txtApellidoFiscal" minWidth="200" GridPane.columnIndex="3" GridPane.rowIndex="1" />
 
-                    <!-- Fila 3 -->
                     <Label text="Edad" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="2" GridPane.rowIndex="2" GridPane.halignment="RIGHT"/>
                     <TextField fx:id="txtEdadFiscal" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                    <Label text="Correo" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
-                    <TextField fx:id="txtCorreoFiscal" GridPane.columnIndex="3" GridPane.rowIndex="2" minWidth="200"/>
 
-                    <!-- Fila 4 -->
-                    <Label text="Teléfono" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                    <TextField fx:id="txtTelefonoFiscal" GridPane.columnIndex="1" GridPane.rowIndex="3" minWidth="200"/>
-                    <!--
-                    <Label text="Establecimiento" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                    <ComboBox fx:id="elementoEstablecimientoFiscal" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-                    -->
+                    <Label text="Correo" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.halignment="RIGHT"/>
+                    <TextField fx:id="txtCorreoFiscal" minWidth="200" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+
+                    <Label text="Teléfono" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.halignment="RIGHT"/>
+                    <TextField fx:id="txtTelefonoFiscal" minWidth="200" GridPane.columnIndex="1" GridPane.rowIndex="3" />
 
                     <Label text="Vota en" GridPane.columnIndex="2" GridPane.rowIndex="3" />
                     <ComboBox fx:id="elementoEstablecimientoVota" GridPane.columnIndex="3" GridPane.rowIndex="3" />
-                    <!-- Fila 5 -->
+
                     <Label text="Tipo Fiscal" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.halignment="RIGHT"/>
                     <ComboBox fx:id="elementoTipoFiscal" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
                     <Label text="Jornada" GridPane.columnIndex="2" GridPane.rowIndex="4"> </Label>
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="2" GridPane.rowIndex="4" GridPane.halignment="RIGHT"/>
                     <ComboBox fx:id="elementoJornada" GridPane.columnIndex="3" GridPane.rowIndex="4"> </ComboBox>
-                    <!-- Fila 6 -->
-                    <Label text="Activo" GridPane.columnIndex="0" GridPane.rowIndex="5"> </Label>
-                    <CheckBox fx:id="chkActivoFiscal" selected="true" GridPane.columnIndex="1" GridPane.rowIndex="5"> </CheckBox>
-                    <Label text="Mesa" GridPane.columnIndex="2" GridPane.rowIndex="5"> </Label>
-                    <Label fx:id="campoMesa" text="" GridPane.columnIndex="3" GridPane.rowIndex="5"> </Label>
 
-                    <!-- Fila 7 -->
-                    <Label text="Domicilio del fiscal" textFill="#eb6117" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="6">
-                        <font>
-                            <Font size="15.0" />
-                        </font>
+
+                    <Label text="Domicilio del fiscal" styleClass="domicilio" GridPane.columnIndex="4" GridPane.columnSpan="3" GridPane.rowIndex="1">
                     </Label>
-                    <!-- Fila 8 -->
-                    <Label text="Calle" GridPane.columnIndex="0" GridPane.rowIndex="7" />
-                    <TextField fx:id="campoBuscarCalle" prefWidth="250" promptText="Busque la calle..." GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                    <Label text="Altura" GridPane.columnIndex="2" GridPane.rowIndex="7" />
-                    <TextField fx:id="txtAlturaDireccionFiscal" GridPane.columnIndex="3" GridPane.rowIndex="7" />
 
-                    <!-- Fila 9 -->
-                    <Label text="Piso" GridPane.columnIndex="0" GridPane.rowIndex="8" />
-                    <ComboBox fx:id="elementoTipoPisoFiscal" GridPane.columnIndex="1" GridPane.rowIndex="8" />
-                    <Label text="Dpto" GridPane.columnIndex="2" GridPane.rowIndex="8" />
-                    <ComboBox fx:id="elementoTipoDepartamento" GridPane.columnIndex="3" GridPane.rowIndex="8" />
+                    <Label text="Calle" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+                    <TextField fx:id="campoBuscarCalle" prefWidth="250" promptText="Busque la calle..." GridPane.columnIndex="5" GridPane.rowIndex="2" />
+                    <Label text="Altura" GridPane.columnIndex="6" GridPane.rowIndex="2" />
+                    <TextField fx:id="txtAlturaDireccionFiscal" GridPane.columnIndex="7" GridPane.rowIndex="2" />
+
+
+                    <Label text="Piso" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+                    <ComboBox fx:id="elementoTipoPisoFiscal" GridPane.columnIndex="5" GridPane.rowIndex="3" />
+                    <Label text="Dpto" GridPane.columnIndex="6" GridPane.rowIndex="3" />
+                    <ComboBox fx:id="elementoTipoDepartamento" GridPane.columnIndex="7" GridPane.rowIndex="3" />
+
+
+                    <Label text="Activo" GridPane.columnIndex="4" GridPane.rowIndex="4"> </Label>
+                    <CheckBox fx:id="chkActivoFiscal" selected="true" GridPane.columnIndex="5" GridPane.rowIndex="4"> </CheckBox>
+                    <Label fx:id="labelMesa" GridPane.columnIndex="6" GridPane.rowIndex="4"> </Label>
+                    <Label fx:id="campoMesa" GridPane.columnIndex="7" GridPane.rowIndex="4"> </Label>
 
                     <!-- Fila 10: Botones alineados a la derecha -->
-                    <HBox alignment="CENTER_RIGHT" spacing="10" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="9">
+                    <HBox alignment="CENTER_RIGHT" spacing="10" GridPane.columnIndex="2" GridPane.columnSpan="7" GridPane.rowIndex="9">
                         <Button fx:id="btnGuardarFiscal" onAction="#guardarFiscal" text="Guardar" />
                         <Button fx:id="btnactualizarFiscal" onAction="#actualizarFiscal" text="Actualizar"> </Button>
                         <Button fx:id="btnCancelarFiscal" onAction="#limpiarCampos" text="Cancelar"> </Button>
                     </HBox>
                     <!-- Fila 11 -->
-                    <Label fx:id="msgFiscalGuardado" GridPane.columnIndex="0" GridPane.rowIndex="10" GridPane.columnSpan="2"> </Label>
+                    <Label fx:id="msgFiscalGuardado" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="11"> </Label>
                    <rowConstraints>
                       <RowConstraints />
                       <RowConstraints />
@@ -114,12 +119,13 @@
                   <RowConstraints />
                   <RowConstraints />
                   <RowConstraints />
+                  <RowConstraints />
                    </rowConstraints>
                 </GridPane>
 
-                <!-- IMAGEN A LA DERECHA DEL FORMULARIO -->
-                <VBox alignment="TOP_RIGHT" spacing="10" prefWidth="300" minWidth="300">
-                    <ImageView fitHeight="300" preserveRatio="true">
+                <!-- IMAGEN A LA DERECHA DEL FORMULARIO
+                <VBox alignment="TOP_RIGHT" spacing="10" prefWidth="250" minWidth="250">
+                    <ImageView fitHeight="250" preserveRatio="true">
                         <image>
                             <Image url="@img/fiscales.jpg" />
                         </image>
@@ -128,12 +134,26 @@
                   </VBox.margin>
                     </ImageView>
 
-                </VBox>
+                </VBox> -->
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT" spacing="10" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="10">
+                <Label text="Búsquedas" styleClass="titulo-seleccion"> </Label>
+                <RadioButton fx:id="todos" onAction="#cargarFiscalesTabla" text="Todos (activos)" styleClass="radio-filtro"> </RadioButton>
+                <RadioButton fx:id="filtros" text="Filtros" styleClass="radio-filtro"> </RadioButton>
+                <CheckBox fx:id="chkBusquedaTipoFiscal" text="Tipo Fiscal" styleClass="check-filtro"> </CheckBox>
+                <ComboBox fx:id="tipoFiscalBusqueda" styleClass="combo-filtro"> </ComboBox>
+                <CheckBox fx:id="chkBusquedaJornada" text="Jornada" styleClass="check-filtro"> </CheckBox>
+                <ComboBox fx:id="jornadaBusqueda" styleClass="combo-filtro"> </ComboBox>
+                <CheckBox fx:id="chkPorApellido" text="Apellido" styleClass="radio-filtro"> </CheckBox>
+                <TextField fx:id="apellidoBusqueda" styleClass="text-filtro"> </TextField>
+                <CheckBox text="Activo" fx:id="chkFiscalActivoBusqueda" selected="true" styleClass="check-filtro"> </CheckBox>
+                <Button fx:id="btnBusquedaFiltros" text="Buscar" onAction="#opcionesBusquedaPorFiltro"> </Button>
             </HBox>
 
             <!-- TABLA debajo de todo -->
             <VBox spacing="10">
-                <TableView fx:id="tablaFiscales" prefHeight="180" VBox.vgrow="ALWAYS">
+                <TableView fx:id="tablaFiscales" prefHeight="230" VBox.vgrow="ALWAYS">
                     <columns>
                         <TableColumn fx:id="colIdFiscal" prefWidth="40" text="ID"> </TableColumn>
                         <TableColumn fx:id="colNombreFiscal" prefWidth="100" text="Nombre" />

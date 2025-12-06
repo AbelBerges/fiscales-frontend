@@ -56,7 +56,7 @@
                 <Button fx:id="cancelarAsignacion" onAction="#limpiarCampos" text="Cancelar"> </Button>
             </HBox>
             <Label fx:id="msjExito" text="" textFill="#449416"> </Label>
-            <Label text="En el menú desplegable figuran los establecimientos sin mesas asignadas. En la tabla los que tienen mesas asignadas" textFill="#b5603f">
+            <Label text="En el menú desplegable figuran los establecimientos sin mesas asignadas. En la tabla los que tienen mesas asignadas" styleClass="aclaracion-establecimiento">
             <font>
                <Font size="11.0" />
             </font></Label>

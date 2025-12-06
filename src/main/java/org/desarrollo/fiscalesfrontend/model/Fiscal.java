@@ -16,7 +16,7 @@ public class Fiscal {
     private String correoFiscal;
     private String telefono;
     private TipoFiscal tipoFiscal;
-    private boolean activo;
+    private Boolean activo;
     private Establecimiento establecimientoVotacion;
     private Establecimiento establecimientoAsignado;
     private Direccion direccion;

@@ -8,6 +8,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.geometry.Side;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
@@ -24,22 +25,27 @@ import org.desarrollo.fiscalesfrontend.validaciones.Validar;
 import java.io.IOException;
 import java.text.Normalizer;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.function.Function;
 
 public class FiscalesABMConrtoller {
 
     @FXML private TextField txtNombreFiscal, txtApellidoFiscal, txtEdadFiscal, txtCorreoFiscal, txtTelefonoFiscal;
-    @FXML private TextField campoBuscarCalle;
-    @FXML private Label msgFiscalGuardado, campoMesa;
+    @FXML private TextField campoBuscarCalle, apellidoBusqueda;
+    @FXML private Label msgFiscalGuardado, labelMesa, campoMesa;
     @FXML private Label etiquetaId, txtValorId;
     @FXML private ComboBox<TipoPiso> elementoTipoPisoFiscal;
-    @FXML private CheckBox chkActivoFiscal;
+    @FXML private CheckBox chkActivoFiscal, chkFiscalActivoBusqueda;
     @FXML private ComboBox<Establecimiento> elementoEstablecimientoVota;
     @FXML private ComboBox<TipoDepartamento> elementoTipoDepartamento;
     @FXML private TextField txtAlturaDireccionFiscal;
     @FXML private ComboBox<TipoFiscal> elementoTipoFiscal;
+    @FXML private ComboBox<TipoFiscal> tipoFiscalBusqueda;
     @FXML private ComboBox<Jornada> elementoJornada;
-    @FXML private Button btnGuardarFiscal, btnactualizarFiscal, btnCancelarFiscal;
+    @FXML private ComboBox<Jornada> jornadaBusqueda;
+    @FXML private Button btnGuardarFiscal, btnactualizarFiscal, btnCancelarFiscal, btnBusquedaFiltros;
+    @FXML private RadioButton todos, filtros;
+    @FXML private CheckBox chkBusquedaTipoFiscal, chkBusquedaJornada, chkPorApellido;
     @FXML private GridPane gridFormulario;
     //Elementos de la tabla
     @FXML private TableView<Fiscal> tablaFiscales;
@@ -72,6 +78,7 @@ public class FiscalesABMConrtoller {
 
 
     private ObservableList<Fiscal> listaFiscales = FXCollections.observableArrayList();
+    private SortedList<Fiscal> listaOrdenada;
     //Elementos necesarios para la búsqueda de calles.
     private List<Calle> listaCalles;
     private  List<Mesa> listaMesa;
@@ -98,14 +105,23 @@ public class FiscalesABMConrtoller {
         colCorreoFiscal.setCellValueFactory(new PropertyValueFactory<>("correoFiscal"));
         colTelefonoFiscal.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colEstablecimientoVota.setCellValueFactory(celda -> {
-            Establecimiento est = celda.getValue().getEstablecimientoVotacion();
-            String nomEst = est.getNombreEstablecimiento();
-            return new ReadOnlyObjectWrapper<>(nomEst);
+            if (celda.getValue().getEstablecimientoVotacion() != null) {
+                Establecimiento est = celda.getValue().getEstablecimientoVotacion();
+                String nomEst = est.getNombreEstablecimiento();
+                return new ReadOnlyObjectWrapper<>(nomEst);
+            } else {
+                return new ReadOnlyObjectWrapper<>("Sin asignar");
+            }
         });
         colTipoFiscal.setCellValueFactory(e -> {
-            TipoFiscal elTipo = e.getValue().getTipoFiscal();
-            String nombre = elTipo.getNombre();
-            return new ReadOnlyObjectWrapper<>(nombre);
+            if (e.getValue().getTipoFiscal() != null) {
+                TipoFiscal elTipo = e.getValue().getTipoFiscal();
+                String nombre = elTipo.getNombre();
+                return new ReadOnlyObjectWrapper<>(nombre);
+            } else {
+                return new ReadOnlyObjectWrapper<>("No tiene");
+            }
+
         });
         colCalleFiscal.setCellValueFactory(e -> {
             Calle laCalle = e.getValue().getDireccion().getCalle();
@@ -117,16 +133,37 @@ public class FiscalesABMConrtoller {
             return new ReadOnlyObjectWrapper<>(altura);
         });
         colTipoPisoFiscal.setCellValueFactory(e -> {
-            TipoPiso tpf = e.getValue().getDireccion().getTipoPiso();
-            String nombre = tpf.getNombre();
-            return new ReadOnlyObjectWrapper<>(nombre);
+            if (e.getValue().getDireccion().getTipoPiso() != null) {
+                TipoPiso tpf = e.getValue().getDireccion().getTipoPiso();
+                String nombre = tpf.getNombre();
+                return new ReadOnlyObjectWrapper<>(nombre);
+            } else {
+                return new ReadOnlyObjectWrapper<>("No tiene");
+            }
+
         });
         colTipoDeparatementoFiscal.setCellValueFactory(e -> {
-            TipoDepartamento tdepto = e.getValue().getDireccion().getTipoDepartamento();
-            String nomDpto = tdepto.getNombre();
-            return new ReadOnlyObjectWrapper<>(nomDpto);
+            if (e.getValue().getDireccion().getTipoDepartamento() != null) {
+                TipoDepartamento tdepto = e.getValue().getDireccion().getTipoDepartamento();
+                String nomDpto = tdepto.getNombre();
+                return new ReadOnlyObjectWrapper<>(nomDpto);
+            } else {
+                return new ReadOnlyObjectWrapper<>("No tiene");
+            }
+
         });
         colActivoFiscal.setCellValueFactory(new PropertyValueFactory<>("activo"));
+        colActivoFiscal.setCellFactory(col -> new TableCell<Fiscal, Boolean>() {
+            @Override
+            protected void updateItem(Boolean activo, boolean empty) {
+                super.updateItem(activo, empty);
+                if (empty || activo == null) {
+                    setText(null);
+                } else {
+                    setText(activo ? "Sí" : "No");
+                }
+            }
+        });
         //Cargamos las calles para toda la vista desde la base
         cargarListadoCalle();
         //Cargamos las calles para el domilicio
@@ -135,30 +172,42 @@ public class FiscalesABMConrtoller {
         //Configuramos el texto para la carga asíncrona de tipo de pisos
         elementoTipoPisoFiscal.setPromptText("Seleccione un piso");
         //Cargamos los tipos de pisos
-        cargarTiposPisos();
+        cargarListasEnComboBox(elementoTipoPisoFiscal, () -> tipoPisoServicio.listarTipoPiso());
         construirComBox(elementoTipoPisoFiscal, TipoPiso::getNombre, "Seleccione un piso");
         //configuramos el texto del combobox de tipo de departamento para la carga asíncrona
         elementoTipoDepartamento.setPromptText("Seleccione un departamento");
         //Cargamos los tipos de departamentos
-        cargarTipoDepartamento();
+        cargarListasEnComboBox(elementoTipoDepartamento, () -> tipoDeptoServicio.listarTiposDepartamentos());
         construirComBox(elementoTipoDepartamento, TipoDepartamento::getNombre, "Seleccione un departamento");
         //Configuramos el texto del combobox de tipo de fiscal para la carga asíncrona
         elementoTipoFiscal.setPromptText("Seleccione tipo Fiscal");
         //Cargampos los tipos de fiscales
-        cargarTiposFiscales();
+        cargarListasEnComboBox(elementoTipoFiscal, () -> tipoFiscalServicio.listarTiposFiscales());
         construirComBox(elementoTipoFiscal, TipoFiscal::getNombre, "Seleccione tipo Fiscal");
         //Configuramos el texto que se muestra por defecto en el combobox jornada
         elementoJornada.setPromptText("Seleccione una jornada");
-        //Cargamos las jornadas
-        cargarJornadas();
+        cargarListasEnComboBox(elementoJornada, () -> jornadaServicio.listarJornadas());
         construirComBox(elementoJornada, Jornada::getTipoJornada, "Seleccione una jornada");
         //Elementos y listado donde vota el fiscal
         elementoEstablecimientoVota.setPromptText("Donde vota el fiscal");
-        cargarEstablecimientoVota();
+        //cargarEstablecimientoVota();
+        cargarListasEnComboBox(elementoEstablecimientoVota, () -> estServicio.listarEstablecimientos());
         construirComBox(elementoEstablecimientoVota, Establecimiento::getNombreEstablecimiento, "Donde vota el fiscal");
+        //Tipos de fiscales para la búsqueda
+        tipoFiscalBusqueda.setPromptText("Seleccionar");
+        cargarListasEnComboBox(tipoFiscalBusqueda, () -> tipoFiscalServicio.listarTiposFiscales());
+        construirComBox(tipoFiscalBusqueda, TipoFiscal::getNombre, "Seleccionar");
+
+        //Las jornadas para los filtros de búsqueda
+        jornadaBusqueda.setPromptText("Seleccionar");
+        cargarListasEnComboBox(jornadaBusqueda, () -> jornadaServicio.listarJornadas());
+        construirComBox(jornadaBusqueda, Jornada::getTipoJornada, "Seleccionar");
+
         //Cargamos los ficales en la tabla
-        tablaFiscales.setItems(listaFiscales);
-        cargarFiscalesTabla();
+        listaOrdenada = new SortedList<>(listaFiscales);
+        listaOrdenada.comparatorProperty().bind(tablaFiscales.comparatorProperty());
+        tablaFiscales.setItems(listaOrdenada);
+
         //Agregamos los listeners para habilitar botones de guardar y actualizar
         txtValorId.textProperty().addListener((obs, oldValue, newValue) -> habilitarActualizar());
         txtNombreFiscal.textProperty().addListener((obs, oldValue, newValue) -> {
@@ -192,13 +241,31 @@ public class FiscalesABMConrtoller {
         campoBuscarCalle.textProperty().addListener((obs, oldValue, newValue) -> {
             habilitarGuardar();
             habilitarActualizar();
+            habilitarPisoDpto();
         });
         txtAlturaDireccionFiscal.textProperty().addListener((obs, oldValue, newValue) -> {
             habilitarGuardar();
             habilitarActualizar();
+            habilitarPisoDpto();
         });
         habilitarGuardar();
         habilitarActualizar();
+        habilitarPisoDpto();
+        //Elementos y controles de las búsquedas
+        boolean filtroActivo = filtros.isSelected();
+        setEstadoGrupoFiltro(filtroActivo);
+        btnBusquedaFiltros.setDisable(true);
+        filtros.selectedProperty().addListener((obs, ov, nv) -> {
+            setEstadoGrupoFiltro(nv);
+        });
+        //Vinculamos cada checkbox con su control
+        vincularCheckBoxYControl(chkBusquedaTipoFiscal, tipoFiscalBusqueda);
+        vincularCheckBoxYControl(chkBusquedaJornada, jornadaBusqueda);
+        vincularCheckBoxYControl(chkPorApellido, apellidoBusqueda);
+        tipoFiscalBusqueda.valueProperty().addListener((obs, ov, nv) -> habilitarBotonBusquedaFiltro());
+        jornadaBusqueda.valueProperty().addListener((obs, ov,nv) -> habilitarBotonBusquedaFiltro());
+        apellidoBusqueda.textProperty().addListener((obs, ov, nv) -> habilitarBotonBusquedaFiltro());
+        chkFiscalActivoBusqueda.selectedProperty().addListener((obs, ov, nv) -> habilitarBotonBusquedaFiltro());
         // Ajustamos el diseño de la distribución y ubicación de algunos elementos de la tabla
         tablaFiscales.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         colMesa.setStyle("-fx-alignment: CENTER;");
@@ -224,7 +291,11 @@ public class FiscalesABMConrtoller {
         txtCorreoFiscal.setText(fiscal.getCorreoFiscal());
         txtTelefonoFiscal.setText(fiscal.getTelefono());
         if (fiscal.getMesa() != null) {
+            labelMesa.setText("Mesa");
             campoMesa.setText(String.valueOf(fiscal.getMesa().getNumeroMesa()));
+        } else {
+            labelMesa.setText("Mesa");
+            campoMesa.setText("Sin asignación");
         }
         if (fiscal.getEstablecimientoVotacion() != null) {
             Integer votaId = fiscal.getEstablecimientoVotacion().getIdEstablecimiento();
@@ -246,6 +317,17 @@ public class FiscalesABMConrtoller {
         } else {
             elementoTipoFiscal.getSelectionModel().clearSelection();
         }
+        if (fiscal.getJornada() != null) {
+            Integer id = fiscal.getJornada().getIdJornada();
+            elementoJornada.getItems()
+                    .stream()
+                    .filter(j -> j != null && Objects.equals(j.getIdJornada(), id))
+                    .findFirst()
+                    .ifPresent(elementoJornada::setValue);
+        } else {
+            elementoJornada.getSelectionModel().clearSelection();
+        }
+
         campoBuscarCalle.setText(fiscal.getDireccion().getCalle().getNombre());
         txtAlturaDireccionFiscal.setText(String.valueOf(fiscal.getDireccion().getAltura()));
         if (fiscal.getDireccion() != null && fiscal.getDireccion().getTipoPiso() != null) {
@@ -315,7 +397,10 @@ public class FiscalesABMConrtoller {
         Integer idJornada = elementoJornada.getValue() != null
                 ? elementoJornada.getValue().getIdJornada()
                 : null;
-        Integer idEstablecimientoVota = elementoEstablecimientoVota.getValue().getIdEstablecimiento();
+        //Integer idEstablecimientoVota = elementoEstablecimientoVota.getValue().getIdEstablecimiento();
+        Integer idEstablecimientoVota = elementoEstablecimientoVota.getValue() != null
+                ? elementoEstablecimientoVota.getValue().getIdEstablecimiento()
+                : null;
         Integer idTipoPiso = elementoTipoPisoFiscal.getValue() != null
                 ? elementoTipoPisoFiscal.getValue().getIdPiso()
                 : null;
@@ -358,44 +443,38 @@ public class FiscalesABMConrtoller {
             Task<Fiscal> tareaEnriquecer = new Task<Fiscal>() {
                 @Override
                 protected Fiscal call() throws Exception {
-                    if (fiscal.getDireccion() != null && fiscal.getDireccion().getCalle() != null) {
-                        Calle c = calleServicio.buscarPorId(fiscal.getDireccion().getCalle().getIdCalle());
-                        fiscal.getDireccion().setCalle(c);
-                    }
-                    if (fiscal.getDireccion() != null && fiscal.getDireccion().getTipoPiso() != null) {
-                        TipoPiso tp = tipoPisoServicio.buscarPorId(fiscal.getDireccion().getTipoPiso().getIdPiso());
-                        fiscal.getDireccion().setTipoPiso(tp);
-                    }
-                    if (fiscal.getDireccion() != null && fiscal.getDireccion().getTipoDepartamento() != null) {
-                        TipoDepartamento tpDpto = tipoDeptoServicio.buscarPorId(fiscal.getDireccion().getTipoDepartamento().getIdDepartamento());
-                        fiscal.getDireccion().setTipoDepartamento(tpDpto);
-                    }
-                    if (fiscal.getTipoFiscal() != null) {
-                        TipoFiscal tipoFiscal = tipoFiscalServicio.buscarPorID(fiscal.getTipoFiscal().getIdTipoFiscal());
-                        fiscal.setTipoFiscal(tipoFiscal);
-                    }
-                    if (fiscal.getEstablecimientoVotacion() != null) {
-                        EstablecimientoResponseDTO dto = estServicio.buscarPorId(fiscal.getEstablecimientoVotacion().getIdEstablecimiento());
-                        Establecimiento est = EstablecimientoMapper.aEntidadModelo(dto);
-                        fiscal.setEstablecimientoVotacion(est);
-                    }
-                    if (fiscal.getJornada() != null) {
-                        JornadaResponseDTO dto = jornadaServicio.buscarPorId(fiscal.getJornada().getIdJornada());
-                        Jornada jornada = JornadaMapper.aEntidadCompleta(dto);
-                        fiscal.setJornada(jornada);
-                    }
-                    return fiscal;
+                    return controlCamposTabla(fiscal);
                 }
             };
             tareaEnriquecer.setOnSucceeded(e -> {
+                Fiscal paraTabla = tareaEnriquecer.getValue();
+                if (filtros.isSelected()) {
+                    if (paraTabla.isActivo() != chkFiscalActivoBusqueda.isSelected()) {
+                        opcionesBusquedaPorFiltro();
+                        return;
+                    }
+                    if (tipoFiscalBusqueda.getValue() != null &&
+                            !Objects.equals(tipoFiscalBusqueda.getValue().getIdTipoFiscal(), paraTabla.getTipoFiscal().getIdTipoFiscal())) {
+                        opcionesBusquedaPorFiltro();
+                        return;
+                    }
+                    if (jornadaBusqueda.getValue() != null &&
+                            !Objects.equals(jornadaBusqueda.getValue().getIdJornada(), paraTabla.getJornada().getIdJornada())) {
+                        opcionesBusquedaPorFiltro();
+                        return;
+                    }
+                }
                 listaFiscales.add(tareaEnriquecer.getValue());
+                listaFiscales.sort(Comparator.comparing(f -> f.getApellidoFiscal() != null ? f.getApellidoFiscal() : null));
+                tablaFiscales.setItems(listaFiscales);
             });
             tareaEnriquecer.setOnFailed(e ->  mostrarAlerta("Error", "Falló la carga de la tabla " + tareaEnriquecer.getException().getMessage(), Alert.AlertType.ERROR));
             new Thread(tareaEnriquecer).start();
         });
         tarea.setOnFailed(evento -> {
             Throwable err =tarea.getException();
-            mostrarAlerta("Error", "No se ha podido guardar el fisfal " + err.getMessage(), Alert.AlertType.ERROR);
+            err.printStackTrace();
+            mostrarAlerta("Error", "No se ha podido guardar el fiscal " + err.getMessage(), Alert.AlertType.ERROR);
         });
         new Thread(tarea).start();
 
@@ -427,7 +506,7 @@ public class FiscalesABMConrtoller {
         Integer nuevaJornada = elementoJornada.getValue() != null
                 ? elementoJornada.getValue().getIdJornada()
                 : null;
-        boolean estado = chkActivoFiscal.isSelected();
+        Boolean estado = chkActivoFiscal.isSelected();
         String textoCalle = campoBuscarCalle.getText();
         Calle nuevaCalle = listaCalles
                 .stream()
@@ -454,16 +533,6 @@ public class FiscalesABMConrtoller {
         Integer nuevoTipoDpto = elementoTipoDepartamento.getValue() != null
                 ? elementoTipoDepartamento.getValue().getIdDepartamento()
                 : null;
-        /*Integer numMesa = Integer.parseInt(campoMesa.getText());
-        Mesa laMesa = listaMesa
-                .stream()
-                .filter(m -> m.getNumeroMesa().equals(numMesa))
-                .findFirst()
-                .orElse(null);
-        if (laMesa == null) {
-            mostrarAlerta("Error", "No se ha encontrado la calle", Alert.AlertType.ERROR);
-        }
-        Integer idMesa = laMesa != null ? laMesa.getIdMesa() : null;*/
         //Armamos el DTO para la actualización
         FiscalRequestDTO nuevoDto = new FiscalRequestDTO(
                 nuevoNombre,
@@ -481,6 +550,13 @@ public class FiscalesABMConrtoller {
                 nuevaJornada,
                 null
         );
+        //Buscamos el fiscal antes de actualizar para saber el estado de activo true/flase
+        Fiscal temp = new Fiscal();
+        try {
+            temp = servicio.buscoPorId(tomoId);
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         //Creamos la tarea para la actualización en segundo plano
         Task<Boolean> tarea = new Task<Boolean>() {
             @Override
@@ -489,6 +565,7 @@ public class FiscalesABMConrtoller {
             }
         };
         //Si la tarea termina con exito
+        Fiscal finalTemp = temp;
         tarea.setOnSucceeded(evento -> {
             msgFiscalGuardado.setText("Se ha actualizado el fiscal");
             //Evaluar como recargar la tabla con el dato actualizado
@@ -513,46 +590,34 @@ public class FiscalesABMConrtoller {
             Task<Fiscal> enriquecer = new Task<Fiscal>() {
                 @Override
                 protected Fiscal call() throws Exception {
-                    if (fiscal.getDireccion() != null && fiscal.getDireccion().getCalle() != null) {
-                        Calle c = calleServicio.buscarPorId(fiscal.getDireccion().getCalle().getIdCalle());
-                        fiscal.getDireccion().setCalle(c);
-                    }
-                    if (fiscal.getDireccion() != null && fiscal.getDireccion().getTipoPiso() != null) {
-                        TipoPiso tp = tipoPisoServicio.buscarPorId(fiscal.getDireccion().getTipoPiso().getIdPiso());
-                        fiscal.getDireccion().setTipoPiso(tp);
-                    }
-                    if (fiscal.getDireccion() != null && fiscal.getDireccion().getTipoDepartamento() != null) {
-                        TipoDepartamento tpd = tipoDeptoServicio.buscarPorId(fiscal.getDireccion().getTipoDepartamento().getIdDepartamento());
-                        fiscal.getDireccion().setTipoDepartamento(tpd);
-                    }
-                    if (fiscal.getTipoFiscal() != null) {
-                        TipoFiscal tpf = tipoFiscalServicio.buscarPorID(fiscal.getTipoFiscal().getIdTipoFiscal());
-                        fiscal.setTipoFiscal(tpf);
-                    }
-                    if (fiscal.getEstablecimientoVotacion() != null) {
-                        EstablecimientoResponseDTO dto = estServicio.buscarPorId(fiscal.getEstablecimientoVotacion().getIdEstablecimiento());
-                        Establecimiento est = EstablecimientoMapper.aEntidadModelo(dto);
-                        fiscal.setEstablecimientoVotacion(est);
-                    }
-                    if (fiscal.getJornada() != null) {
-                        JornadaResponseDTO jdnDto = jornadaServicio.buscarPorId(fiscal.getJornada().getIdJornada());
-                        Jornada jornada = JornadaMapper.aEntidadCompleta(jdnDto);
-                        fiscal.setJornada(jornada);
-                    }
-                    /*if (fiscal.getMesa() != null) {
-                        MesaResponseDTO msDto = mesaServicio.buscoMesaPorId(fiscal.getMesa().getIdMesa());
-                        Mesa mesa = MesaMapper.aEntidadCompleta(msDto);
-                        fiscal.setMesa(mesa);
-                    }*/
-                    return fiscal;
+                    return controlCamposTabla(fiscal);
                 }
             };
             enriquecer.setOnSucceeded(e -> {
+                if (finalTemp.isActivo() != nuevoDto.activo()) {
+                    opcionesBusquedaPorFiltro();
+                    return;
+                }
+                if (tipoFiscalBusqueda.getValue() != null &&
+                        !Objects.equals(tipoFiscalBusqueda.getValue().getIdTipoFiscal(), finalTemp.getTipoFiscal().getIdTipoFiscal())) {
+                    opcionesBusquedaPorFiltro();
+                    return;
+                }
+                if (jornadaBusqueda.getValue() != null &&
+                        !Objects.equals(jornadaBusqueda.getValue().getIdJornada(), finalTemp.getJornada().getIdJornada())) {
+                    opcionesBusquedaPorFiltro();
+                    return;
+                }
+                if (!apellidoBusqueda.getText().isEmpty() &&
+                        !Objects.equals(apellidoBusqueda.getText().toUpperCase(), finalTemp.getApellidoFiscal())) {
+                    opcionesBusquedaPorFiltro();
+                    return;
+                }
                 Fiscal actualizado = enriquecer.getValue();
                 //Tomamos el índice en la lista
                 int index = -1;
                 for (int i = 0; i < listaFiscales.size(); i++) {
-                    if (listaFiscales.get(i).getIdFiscal() == actualizado.getIdFiscal()) {
+                    if (Objects.equals(listaFiscales.get(i).getIdFiscal(), actualizado.getIdFiscal())) {
                         index = i;
                         break;
                     }
@@ -560,9 +625,8 @@ public class FiscalesABMConrtoller {
                 //si lo encontró, lo reemplazamos. Si no, lo agrega
                 if (index >= 0) {
                     listaFiscales.set(index, actualizado);
-                } else {
-                    listaFiscales.add(actualizado);
                 }
+
             });
             enriquecer.setOnFailed(e -> mostrarAlerta("Error", "No se pudo recargar la tabla", Alert.AlertType.ERROR));
             new Thread(enriquecer).start();
@@ -576,68 +640,105 @@ public class FiscalesABMConrtoller {
         new Thread(tarea).start();
     }
 
-    private void cargarFiscalesTabla() {
+
+    private Fiscal controlCamposTabla(Fiscal datos) {
+        try {
+            if (datos.getDireccion() != null && datos.getDireccion().getCalle() != null) {
+                Calle c = calleServicio.buscarPorId(datos.getDireccion().getCalle().getIdCalle());
+                datos.getDireccion().setCalle(c);
+            }
+            if (datos.getDireccion() != null && datos.getDireccion().getTipoPiso() != null) {
+                TipoPiso tp = tipoPisoServicio.buscarPorId(datos.getDireccion().getTipoPiso().getIdPiso());
+                datos.getDireccion().setTipoPiso(tp);
+            }
+            if (datos.getDireccion() != null && datos.getDireccion().getTipoDepartamento() != null) {
+                TipoDepartamento tpd = tipoDeptoServicio.buscarPorId(datos.getDireccion().getTipoDepartamento().getIdDepartamento());
+                datos.getDireccion().setTipoDepartamento(tpd);
+            }
+            if (datos.getTipoFiscal() != null) {
+                TipoFiscal tpf = tipoFiscalServicio.buscarPorID(datos.getTipoFiscal().getIdTipoFiscal());
+                datos.setTipoFiscal(tpf);
+            }
+            if (datos.getEstablecimientoVotacion() != null && datos.getEstablecimientoVotacion().getIdEstablecimiento() != null) {
+                EstablecimientoResponseDTO dto = estServicio.buscarPorId(datos.getEstablecimientoVotacion().getIdEstablecimiento());
+                Establecimiento est = EstablecimientoMapper.aEntidadModelo(dto);
+                datos.setEstablecimientoVotacion(est);
+            }
+            if (datos.getMesa() != null && datos.getMesa().getIdMesa() !=null) {
+                MesaResponseDTO dto = mesaServicio.buscoMesaPorId(datos.getMesa().getIdMesa());
+                Mesa mesa = MesaMapper.aEntidadCompleta(dto);
+                datos.setMesa(mesa);
+            }
+            if (datos.getJornada() != null) {
+                JornadaResponseDTO jdnDto = jornadaServicio.buscarPorId(datos.getJornada().getIdJornada());
+                Jornada jornada = JornadaMapper.aEntidadCompleta(jdnDto);
+                datos.setJornada(jornada);
+            }
+        } catch (Exception e) {
+            mostrarAlerta("Error", "Error al controlar los datos de la tabla", Alert.AlertType.ERROR);
+        }
+        return datos;
+    }
+
+    @FXML
+    private void opcionesBusquedaPorFiltro() {
+        Integer idTipoFiscal = tipoFiscalBusqueda.getValue() != null ? tipoFiscalBusqueda.getValue().getIdTipoFiscal() : null;
+        Integer idJornada = jornadaBusqueda.getValue() != null ? jornadaBusqueda.getValue().getIdJornada() : null;
+        Boolean activo = chkFiscalActivoBusqueda.isSelected();
+        String apellido = apellidoBusqueda.getText();
+
+        if (apellido != null && apellido.isEmpty()) {
+            apellido = null;
+        }
+        cargarFiscalesTablaConFiltros(idTipoFiscal, idJornada, activo, apellido);
+    }
+
+    private void cargarFiscalesTablaConFiltros(Integer idTipoFiscal, Integer idJornada, Boolean activo, String apellido) {
+        listaFiscales.clear();
         Task<List<Fiscal>> tarea = new Task<List<Fiscal>>() {
             @Override
             protected List<Fiscal> call() throws Exception {
-                List<Fiscal> lista = servicio.listarFiscales();
+                List<Fiscal> lista = servicio.listarFiscalesParaLasOpcionesDeFiltrado(idTipoFiscal, idJornada, activo, apellido);
+                for (Fiscal fiscal : lista) {
+                    controlCamposTabla(fiscal);
+                }
+                return lista;
+            }
+        };
+        tarea.setOnSucceeded(evento -> {
+            listaFiscales.setAll(tarea.getValue());
+            listaFiscales.sort(Comparator.comparing(f -> f.getApellidoFiscal() != null ? f.getApellidoFiscal() : ""));
+            tablaFiscales.setItems(listaFiscales);
+        });
+        tarea.setOnFailed(evento -> {
+            mostrarAlerta("Error", "No se pudo recupera la lista con la búsqueda requerida para cargar la tabla " + tarea.getException().getMessage(), Alert.AlertType.ERROR);
+        });
+        new Thread(tarea).start();
+    }
+
+    @FXML
+    private void cargarFiscalesTabla() {
+        listaFiscales.clear();
+        filtros.selectedProperty().set(false);
+        setEstadoGrupoFiltro(filtros.isSelected());
+        Task<List<Fiscal>> tarea = new Task<List<Fiscal>>() {
+            @Override
+            protected List<Fiscal> call() throws Exception {
+                List<Fiscal> lista = servicio.listarFiscalesActivos();
                 for (Fiscal fiscal : lista) {
                     //Buscamos y cargamos, si tiene, la calle en el objeto fiscal
-                    if (fiscal.getDireccion().getCalle() != null) {
-                        Calle c = calleServicio.buscarPorId(fiscal.getDireccion().getCalle().getIdCalle());
-                        fiscal.getDireccion().setCalle(c);
-                        fiscal.getDireccion().setAltura(fiscal.getDireccion().getAltura());
-                    }
-                    if (fiscal.getDireccion().getTipoPiso() != null) {
-                        TipoPiso tp = tipoPisoServicio.buscarPorId(fiscal.getDireccion().getTipoPiso().getIdPiso());
-                        fiscal.getDireccion().setTipoPiso(tp);
-                    }
-                    if (fiscal.getDireccion().getTipoDepartamento() != null) {
-                        TipoDepartamento tipoDpto = tipoDeptoServicio.buscarPorId(fiscal.getDireccion().getTipoDepartamento().getIdDepartamento());
-                        fiscal.getDireccion().setTipoDepartamento(tipoDpto);
-                    }
-                    //Buscamos y cargamos en el objeto fiscal el TipoFiscal
-                    if (fiscal.getTipoFiscal().getIdTipoFiscal() != null) {
-                        TipoFiscal tf = tipoFiscalServicio.buscarPorID(fiscal.getTipoFiscal().getIdTipoFiscal());
-                        fiscal.setTipoFiscal(tf);
-                    }
-                    if (fiscal.getEstablecimientoVotacion() != null) {
-                        EstablecimientoResponseDTO dto = estServicio.buscarPorId(fiscal.getEstablecimientoVotacion().getIdEstablecimiento());
-                        Establecimiento est = EstablecimientoMapper.aEntidadModelo(dto);
-                        fiscal.setEstablecimientoVotacion(est);
-                    }
-                    if (fiscal.getMesa() != null) {
-                        MesaResponseDTO ms = mesaServicio.buscoMesaPorId(fiscal.getMesa().getIdMesa());
-                        Mesa mesa = MesaMapper.aEntidadCompleta(ms);
-                        fiscal.setMesa(mesa);
-                    }
-                    if (fiscal.getJornada() != null) {
-                        JornadaResponseDTO jdn = jornadaServicio.buscarPorId(fiscal.getJornada().getIdJornada());
-                        Jornada jornada = JornadaMapper.aEntidadCompleta(jdn);
-                        fiscal.setJornada(jornada);
-                    }
-
+                    controlCamposTabla(fiscal);
                 }
                 return lista;
             }
         };
         tarea.setOnSucceeded(event -> {
             listaFiscales.setAll(tarea.getValue());
-            //Ordenamos la lista de fiscales
-            SortedList<Fiscal> listaOrdenada = new SortedList<>(
-                    listaFiscales,
-                    Comparator.comparing(fiscal -> fiscal.getApellidoFiscal() != null ? fiscal.getApellidoFiscal() : "")
-            );
             //Establecemos la lista ordenada para la tabla
-            tablaFiscales.setItems(listaOrdenada);
-            //Vinculamos el comparador con la tabla
-            tablaFiscales.comparatorProperty().addListener((obs, oldValue, newValue) -> {
-                if (newValue != null) {
-                    listaOrdenada.comparatorProperty().bind(tablaFiscales.comparatorProperty());
-                }
-            });
+            listaFiscales.sort(Comparator.comparing(f -> f.getApellidoFiscal() != null ? f.getApellidoFiscal() : ""));
+            tablaFiscales.setItems(listaFiscales);
         });
-        tarea.setOnFailed(evento -> mostrarAlerta("Error", "No se pudo recuperar la lista de fiscales " +
+        tarea.setOnFailed(evento -> mostrarAlerta("Error", "No se pudo recuperar la lista de fiscales al cargar la tabla" +
                 tarea.getException(), Alert.AlertType.ERROR));
         new Thread(tarea).start();
     }
@@ -659,6 +760,8 @@ public class FiscalesABMConrtoller {
         elementoTipoPisoFiscal.getSelectionModel().clearSelection();
         elementoJornada.getSelectionModel().clearSelection();
         chkActivoFiscal.setSelected(true);
+        campoMesa.setText("");
+        labelMesa.setText("");
     }
 
     private void cargarListadoCalle() {
@@ -671,55 +774,15 @@ public class FiscalesABMConrtoller {
         }
     }
 
-    private void cargarTiposFiscales() {
-        Task<List<TipoFiscal>> tarea = new Task<List<TipoFiscal>>() {
+    private <T> void cargarListasEnComboBox(ComboBox<T> combo, Callable<List<T>> proveedor) {
+        Task<List<T>> tarea = new Task<List<T>>() {
             @Override
-            protected List<TipoFiscal> call() throws Exception {
-                return tipoFiscalServicio.listarTiposFiscales();
+            protected List<T> call() throws Exception {
+                return proveedor.call();
             }
         };
-
-        tarea.setOnSucceeded(event -> elementoTipoFiscal.getItems().setAll(tarea.getValue()));
-        tarea.setOnFailed(evento -> mostrarAlerta("Error", "No se ha podido cargar los tipos de fiscales", Alert.AlertType.ERROR));
-        new Thread(tarea).start();
-    }
-
-    private void cargarJornadas() {
-        Task<List<Jornada>> tarea = new Task<List<Jornada>>() {
-            @Override
-            protected List<Jornada> call() throws Exception {
-                return jornadaServicio.listarJornadas();
-            }
-        };
-        tarea.setOnSucceeded(evento -> elementoJornada.getItems().setAll(tarea.getValue()));
-        tarea.setOnFailed(evento -> mostrarAlerta("Error", "No se pudo recuperar la lista de jornadas", Alert.AlertType.ERROR));
-        new Thread(tarea).start();
-    }
-
-
-    private void cargarTipoDepartamento() {
-        Task<List<TipoDepartamento>> tarea = new Task<List<TipoDepartamento>>() {
-            @Override
-            protected List<TipoDepartamento> call() throws Exception {
-                return tipoDeptoServicio.listarTiposDepartamentos();
-            }
-        };
-
-        tarea.setOnSucceeded(evento -> elementoTipoDepartamento.getItems().setAll(tarea.getValue()));
-        tarea.setOnFailed(evento -> mostrarAlerta("Error", "No se ha podido cargar los departamentos", Alert.AlertType.ERROR));
-        new Thread(tarea).start();
-    }
-
-    private void cargarTiposPisos() {
-        Task<List<TipoPiso>> tarea = new Task<List<TipoPiso>>() {
-            @Override
-            protected List<TipoPiso> call() throws Exception {
-                return tipoPisoServicio.listarTipoPiso();
-            }
-        };
-
-        tarea.setOnSucceeded(evento -> elementoTipoPisoFiscal.getItems().setAll(tarea.getValue()));
-        tarea.setOnFailed(evento -> mostrarAlerta("Errro", "No se pudieron cargar los pisos", Alert.AlertType.ERROR));
+        tarea.setOnSucceeded(e -> combo.getItems().setAll(tarea.getValue()));
+        tarea.setOnFailed(e -> mostrarAlerta("Error", "No se pudo cargar la lista ", Alert.AlertType.ERROR));
         new Thread(tarea).start();
     }
 
@@ -739,17 +802,33 @@ public class FiscalesABMConrtoller {
             @Override
             protected void updateItem(T item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null : toStringMapper.apply(item));
+                //setText(empty || item == null ? null : toStringMapper.apply(item));
+                if (empty) {
+                    setText(null);
+                } else if (item == null) {
+                    setText("Todos");
+                } else {
+                    setText(toStringMapper.apply(item));
+                }
             }
         });
         combo.setButtonCell(new ListCell<>() {
             @Override
             protected void updateItem(T item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(!empty && item != null ? toStringMapper.apply(item) : texto);
+                //setText(!empty && item != null ? toStringMapper.apply(item) : texto);
+                if (empty) {
+                    setText(combo.getPromptText());
+                } else if (item == null) {
+                    setText("Todos");
+                } else {
+                    setText(toStringMapper.apply(item));
+                }
             }
         });
     }
+
+
 
     //
     private void cargarCalles() {
@@ -780,22 +859,6 @@ public class FiscalesABMConrtoller {
             mostrarAlerta("Error", "No se pude cargar la lista de calles" + ex.getMessage(), Alert.AlertType.ERROR);
         });
         new Thread(tarea).start();
-    }
-
-    //construimos el combobox para la búsqueda de calles para el elemento de donde vota
-    private void cargarEstablecimientoVota() {
-        Task<List<Establecimiento>> tareaEst = new Task<List<Establecimiento>>() {
-            @Override
-            protected List<Establecimiento> call() throws Exception {
-                return estServicio.listarEstablecimientos();
-            }
-        };
-        tareaEst.setOnSucceeded(evento -> {
-            List<Establecimiento> lista = tareaEst.getValue();
-            elementoEstablecimientoVota.getItems().setAll(lista.stream().sorted(ordenarListas(Establecimiento::getNombreEstablecimiento)).toList());
-        });
-        tareaEst.setOnFailed(event -> mostrarAlerta("Error", "No se pudieron cargar los establecimientos" + tareaEst.getException(), Alert.AlertType.ERROR));
-        new Thread(tareaEst).start();
     }
 
     //Este método es pora completar las calles del método cargarCalles()
@@ -854,6 +917,79 @@ public class FiscalesABMConrtoller {
         alerta.showAndWait();
     }
 
+    private void habilitarPisoDpto() {
+        boolean obligatorios = !campoBuscarCalle.getText().isEmpty() &&
+                !txtAlturaDireccionFiscal.getText().isEmpty();
+        elementoTipoPisoFiscal.setDisable(!obligatorios);
+        elementoTipoDepartamento.setDisable(!obligatorios);
+    }
+
+    /**
+     * Habilita/deshabilita todo el bloque de filtros.
+     * Si se deshabilita, también desmarca los CheckBoxes y limpia los controles asociados.
+     */
+    private void setEstadoGrupoFiltro(boolean activo) {
+       //Habilita/deshabilita los checkboxes
+        chkBusquedaTipoFiscal.setDisable(!activo);
+        chkBusquedaJornada.setDisable(!activo);
+        chkPorApellido.setDisable(!activo);
+        chkFiscalActivoBusqueda.setDisable(!activo);
+        if (!activo) {
+            //desmarcamos los checkboxs
+            chkBusquedaJornada.setSelected(false);
+            chkBusquedaTipoFiscal.setSelected(false);
+            chkPorApellido.setSelected(false);
+            //Limpiamos y deshabilitamos los controles
+            tipoFiscalBusqueda.getSelectionModel().clearSelection();
+            jornadaBusqueda.getSelectionModel().clearSelection();
+            apellidoBusqueda.clear();
+
+            jornadaBusqueda.setDisable(true);
+            tipoFiscalBusqueda.setDisable(true);
+            apellidoBusqueda.setDisable(true);
+        } else {
+            //si se activa el grupo dejamos los controles según el estado de cada checkbox
+            todos.selectedProperty().set(false);
+            tipoFiscalBusqueda.setDisable(!chkBusquedaTipoFiscal.isSelected());
+            jornadaBusqueda.setDisable(!chkBusquedaJornada.isSelected());
+            apellidoBusqueda.setDisable(!chkPorApellido.isSelected());
+            chkFiscalActivoBusqueda.setDisable(false);
+        }
+    }
+
+
+
+
+    /**
+     * Vincula de forma genérica un CheckBox con el control (ComboBox o TextField).
+     * Cuando la checkbox cambia, habilita/deshabilita el control.
+     * Si se desactiva la checkbox, limpia el valor del control.
+     */
+    private void vincularCheckBoxYControl(CheckBox chk, Node control) {
+        //el estado inicial
+        control.setDisable(!chk.isSelected());
+
+        chk.selectedProperty().addListener((obs, ov, nv) -> {
+            control.setDisable(!nv);
+            if (!nv) {
+                //Limpiamos el control
+                if (control instanceof ComboBox<?> cb) {
+                    cb.getSelectionModel().clearSelection();
+                } else if (control instanceof TextField tf) {
+                    tf.clear();
+                }
+            }
+        });
+    }
+
+    private void habilitarBotonBusquedaFiltro() {
+        boolean obligatorio = tipoFiscalBusqueda.getValue() != null ||
+                jornadaBusqueda.getValue() != null ||
+                !apellidoBusqueda.getText().isEmpty() ||
+                !chkFiscalActivoBusqueda.isSelected();
+        btnBusquedaFiltros.setDisable(!obligatorio);
+    }
+
     private void habilitarGuardar() {
         boolean camposObligatorios = txtValorId.getText().isBlank() &&
                 !txtNombreFiscal.getText().isEmpty() &&
@@ -862,7 +998,6 @@ public class FiscalesABMConrtoller {
                 !txtCorreoFiscal.getText().isEmpty() &&
                 !txtTelefonoFiscal.getText().isEmpty() &&
                 elementoTipoFiscal.getValue() != null &&
-                elementoEstablecimientoVota.getValue() != null &&
                 !campoBuscarCalle.getText().isEmpty() &&
                 !txtAlturaDireccionFiscal.getText().isEmpty();
         btnGuardarFiscal.setDisable(!camposObligatorios);
@@ -881,7 +1016,6 @@ public class FiscalesABMConrtoller {
                 !txtCorreoFiscal.getText().isEmpty() &&
                 !txtTelefonoFiscal.getText().isEmpty() &&
                 elementoTipoFiscal.getValue() !=null &&
-                elementoEstablecimientoVota.getValue() != null &&
                 !campoBuscarCalle.getText().isEmpty() &&
                 !txtAlturaDireccionFiscal.getText().isEmpty();
         btnactualizarFiscal.setDisable(!camposObligatorios);

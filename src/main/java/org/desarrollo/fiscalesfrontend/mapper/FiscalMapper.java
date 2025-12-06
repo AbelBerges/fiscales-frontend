@@ -89,7 +89,9 @@ public class FiscalMapper {
             crear.setMesa(mesa);
         }
         laDir.setCalle(laCalle);
-        elEst.setIdEstablecimiento(dto.idEstablecimientoVotacion());
+        if (dto.idEstablecimientoVotacion() != null) {
+            elEst.setIdEstablecimiento(dto.idEstablecimientoVotacion());
+        }
         tipoFiscal.setIdTipoFiscal(dto.idTipoFiscal());
         //armamos el fiscal
         crear.setIdFiscal(dto.idFiscal());
@@ -116,11 +118,11 @@ public class FiscalMapper {
                 fiscal.getTelefono(),
                 fiscal.getTipoFiscal().getIdTipoFiscal(),
                 fiscal.isActivo(),
-                fiscal.getEstablecimientoVotacion().getIdEstablecimiento(),
+                fiscal.getEstablecimientoVotacion() != null ? fiscal.getEstablecimientoVotacion().getIdEstablecimiento(): null,
                 fiscal.getDireccion().getCalle().getIdCalle(),
                 fiscal.getDireccion().getAltura(),
-                fiscal.getDireccion().getTipoPiso().getIdPiso() != null ? fiscal.getDireccion().getTipoPiso().getIdPiso() : null,
-                fiscal.getDireccion().getTipoDepartamento().getIdDepartamento() != null ? fiscal.getDireccion().getTipoDepartamento().getIdDepartamento() : null,
+                fiscal.getDireccion().getTipoPiso() != null ? fiscal.getDireccion().getTipoPiso().getIdPiso() : null,
+                fiscal.getDireccion().getTipoDepartamento() != null ? fiscal.getDireccion().getTipoDepartamento().getIdDepartamento() : null,
                 fiscal.getJornada() != null ? fiscal.getJornada().getIdJornada() : null,
                 fiscal.getMesa() != null ? fiscal.getMesa().getIdMesa() : null
         );

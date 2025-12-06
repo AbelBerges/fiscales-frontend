@@ -1,0 +1,219 @@
+/* ============================================================
+   TEMA macOS LIGHT — JavaFX
+   ============================================================ */
+
+/* --------- GENERAL --------- */
+.root {
+    -fx-font-family: "SF Pro Text", "Segoe UI", "Roboto", sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: #f5f5f7;
+}
+
+/* Contenedores principales */
+.hbox, .vbox, .border-pane, .grid-pane {
+    -fx-padding: 8;
+}
+
+/* --------- LABELS --------- */
+.label {
+    -fx-text-fill: #2c2c2e;
+}
+
+/* --------- TEXTFIELD --------- */
+.text-field, .texto-filtro {
+    -fx-background-color: white;
+    -fx-border-color: #d1d1d6;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 6 8;
+}
+
+.text-field:hover {
+    -fx-border-color: #8e8e93;
+}
+
+/* --------- COMBOBOX --------- */
+.combo-box, .combo-filtro {
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-background-color: white;
+    -fx-border-color: #d1d1d6;
+    -fx-padding: 4 6;
+}
+
+.combo-box:hover {
+    -fx-border-color: #8e8e93;
+}
+
+/* --------- RADIOBUTTON --------- */
+.radio-button, .radio-filtro {
+    -fx-font-size: 13px;
+}
+
+/* --------- BOTONES --------- */
+.button {
+    -fx-background-color: #e1e1e6;
+    -fx-text-fill: #1c1c1e;
+    -fx-background-radius: 6;
+    -fx-padding: 6 12;
+}
+
+.button:hover {
+    -fx-background-color: #d0d0d4;
+}
+
+/* Botones de eliminar (si no se usan inline) */
+.btn-eliminar {
+    -fx-background-color: #ff6b6b;
+    -fx-text-fill: white;
+    -fx-background-radius: 8;
+}
+
+.btn-eliminar:hover {
+    -fx-background-color: #ff3b30;
+}
+
+/* --------- TARJETAS o CELDAS --------- */
+.celda-fiscal {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #e5e5ea;
+    -fx-border-radius: 10;
+    -fx-padding: 6;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 4, 0.2, 0, 1);
+}
+
+.celda-fiscal:hover {
+    -fx-background-color: #f2f2f7;
+    -fx-border-color: #d1d1d6;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 6, 0.25, 0, 2);
+}
+
+/* --------- TABLEVIEW --------- */
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #d1d1d6;
+    -fx-border-radius: 8;
+}
+
+.table-view .column-header {
+    -fx-background-color: #f2f2f7;
+    -fx-font-weight: bold;
+}
+
+
+/* Título tipo secciones ("Selección") */
+.titulo-seccion {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1c1c1e;
+}
+
+/* --------- CHECKBOX (estilo macOS) --------- */
+.check-box, .check-filtro {
+    -fx-font-size: 12px;
+    -fx-text-fill: #2c2c2e;
+    -fx-padding: 0 0 0 2;
+}
+
+/* Caja (no el texto) */
+.check-box .box, .check-filtro .box {
+    -fx-background-color: white;
+    -fx-border-color: #d1d1d6;
+    -fx-border-width: 1.2;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    /*-fx-padding: 6;*/
+
+    /* Tamaño más chico versión macOS */
+    -fx-min-width: 14px;
+    -fx-min-height: 14px;
+    -fx-max-width: 14px;
+    -fx-max-height: 14px;
+
+    -fx-padding: 0; /* sin relleno interno */
+}
+
+/* Hover */
+.check-box:hover .box, .check-filtro:hover .box {
+    -fx-border-color: #8e8e93;
+}
+
+/* Cuando está seleccionado */
+.check-box:selected .box, .check-filtro:selected .box {
+    -fx-background-color: #007aff;   /* Azul típico de macOS */
+    -fx-border-color: #007aff;
+}
+
+/* La tilde */
+.check-box:selected .mark, .check-filtro:selected .mark {
+    -fx-background-color: white;
+    -fx-shape: "M4 7 L6 9 L10 4 L9 3 L6 7 L5 6 Z"; /* tilde más macOS */
+}
+
+.hbox-seleccion {
+    -fx-padding: 6 10 6 10;
+    -fx-spacing: 10px;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.mesa {
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 8;
+}
+
+.mesa-vacia {
+    -fx-background-color: rgba(240,242,245,0.6);
+    -fx-border-color: #D0D3D8;
+    -fx-border-width: 1;
+}
+.mesa-completa {
+    -fx-background-color: rgba(182,219,187,0.32);
+    -fx-border-color: #A1C9A9;
+    -fx-border-width: 1;
+}
+
+.mesa-incompleta {
+    -fx-background-color: rgba(255,214,165,0.32);
+    -fx-border-color: #EBC28E;
+    -fx-border-width: 1;
+}
+
+.titulo-seleccion {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgb(93, 147, 248);
+}
+
+.radio-filtro {
+    -fx-font-size: 12px;
+}
+
+.combo-filtro {
+    -fx-pref-width: 160px;
+    -fx-font-size: 12px;
+}
+
+.text-filtro {
+    -fx-pref-width: 160px;
+    -fx-font-size: 12px;
+}
+
+.domicilio {
+    -fx-font-size: 15;
+    -fx-font-weight: bold;
+    -fx-text-fill: #eb6117;
+}
+
+.requerido {
+    -fx-text-fill: #ff3b30;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 0 4;
+}
+
+.aclaracion-establecimiento {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgb(93, 147, 248);
+}
