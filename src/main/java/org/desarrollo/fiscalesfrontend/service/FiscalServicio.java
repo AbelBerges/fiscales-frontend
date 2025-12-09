@@ -3,11 +3,13 @@ package org.desarrollo.fiscalesfrontend.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpPrincipal;
+import org.desarrollo.fiscalesfrontend.dto.FiscalListaDTO;
 import org.desarrollo.fiscalesfrontend.dto.FiscalRequestDTO;
 import org.desarrollo.fiscalesfrontend.dto.FiscalResponseDTO;
 import org.desarrollo.fiscalesfrontend.mapper.FiscalMapper;
 import org.desarrollo.fiscalesfrontend.model.Fiscal;
 
+import java.awt.datatransfer.FlavorEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -19,7 +21,8 @@ import java.util.List;
 
 public class FiscalServicio {
 
-    private static final String URL_BASE = "http://localhost:8080/fiscales";
+    //private static final String URL_BASE = "http://localhost:8080/fiscales";
+    private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/fiscales";
     private HttpClient cliente;
     private ObjectMapper mapeo;
 
@@ -33,32 +36,65 @@ public class FiscalServicio {
     }
 
     //======================= LISTAR TODOS LOS FISCALES ==============================
-    public List<Fiscal> listarFiscales() throws IOException, InterruptedException {
+    public List<FiscalListaDTO> listarFiscales() throws IOException, InterruptedException {
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE))
                 .GET()
                 .build();
         HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
         if (respuesta.statusCode() == 200) {
-            List<FiscalResponseDTO> listaDTO = mapeo.readValue(respuesta.body(), new TypeReference<List<FiscalResponseDTO>>() {});
-            return listaDTO.stream().map(FiscalMapper::aFiscalDeResponseDTO).toList();
+           return mapeo.readValue(respuesta.body(), new TypeReference<List<FiscalListaDTO>>() {});
+
         } else {
             throw new IOException("Error al listar los fiscales " + respuesta.statusCode());
         }
     }
 
-    //======================= LISTAR TODOS LOS FISCALES ACTIVOS ==============================
-    public List<Fiscal> listarFiscalesActivos() throws IOException, InterruptedException {
+    public List<String> todosFiscalesPorApellido() throws IOException, InterruptedException{
         HttpRequest requerimiento = HttpRequest.newBuilder()
-                .uri(URI.create(URL_BASE + "/fiscales-activos/"))
+                .uri(URI.create(URL_BASE + "/apellidos"))
                 .GET()
                 .build();
         HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
         if (respuesta.statusCode() == 200) {
-            List<FiscalResponseDTO> dto = mapeo.readValue(respuesta.body(), new TypeReference<List<FiscalResponseDTO>>() {});
-            return dto.stream().map(FiscalMapper::aFiscalDeResponseDTO).toList();
+            return mapeo.readValue(respuesta.body(), new TypeReference<List<String>>() {});
         } else {
-            throw new IOException("No se pudo recupera la lista de fiscales activos " + respuesta.statusCode());
+            throw new IOException("No se pudo recuperar la lista de fiscales por apellido ");
+        }
+    }
+
+    public List<FiscalListaDTO> listaParaTablas(Integer idTipofiscal, Integer idJornada, Boolean activo, String apellido) throws IOException, InterruptedException {
+
+        String url = URL_BASE + "/busqueda_optimizada/";
+        StringBuilder query = new StringBuilder("?");
+        boolean primero = true;
+        if (idTipofiscal != null) {
+            query.append("idTipoFiscal=").append(idTipofiscal);
+            primero = false;
+        }
+        if (idJornada != null) {
+            if (!primero) query.append("&");
+            query.append("idJornada=").append(idJornada);
+            primero = false;
+        }
+        if (activo != null) {
+            if (!primero) query.append("&");
+            query.append("activo=").append(activo);
+            primero = false;
+        }
+        if (apellido != null &&!apellido.isEmpty()) {
+            if (!primero) query.append("&");
+            query.append("apellido=").append(URLEncoder.encode(apellido,StandardCharsets.UTF_8));
+        }
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(url + query))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            return mapeo.readValue(respuesta.body(), new TypeReference<List<FiscalListaDTO>>() {});
+        } else {
+            throw new IOException("Error al recuperar la lista para la lista de las tablas");
         }
     }
 
@@ -262,8 +298,6 @@ public class FiscalServicio {
                 .GET()
                 .build();
         HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
-        //System.out.println("Status " + respuesta.statusCode());
-        //System.out.println("Body" + respuesta.body());
         if (respuesta.statusCode() == 200) {
             List<FiscalResponseDTO> list = mapeo.readValue(respuesta.body(), new TypeReference<List<FiscalResponseDTO>>() {});
             return list.stream().map(FiscalMapper::aFiscalDeResponseDTO).toList();

@@ -17,7 +17,8 @@ import java.util.List;
 
 public class MesaServicio {
 
-    private static final String URL_BASE = ("http://localhost:8080/mesas");
+    //private static final String URL_BASE = ("http://localhost:8080/mesas");
+    private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/mesas";
     private HttpClient cliente;
     private ObjectMapper mapeo;
 

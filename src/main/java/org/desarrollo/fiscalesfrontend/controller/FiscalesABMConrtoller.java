@@ -1,7 +1,8 @@
 package org.desarrollo.fiscalesfrontend.controller;
 
 import javafx.application.Platform;
-import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -10,7 +11,6 @@ import javafx.fxml.FXML;
 import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import org.desarrollo.fiscalesfrontend.dto.*;
@@ -49,22 +49,22 @@ public class FiscalesABMConrtoller {
     @FXML private CheckBox chkBusquedaTipoFiscal, chkBusquedaJornada, chkPorApellido;
     @FXML private GridPane gridFormulario;
     //Elementos de la tabla
-    @FXML private TableView<Fiscal> tablaFiscales;
-    @FXML private TableColumn<Fiscal, Integer> colIdFiscal;
-    @FXML private TableColumn<Fiscal, String> colNombreFiscal;
-    @FXML private TableColumn<Fiscal, String> colApellidoFiscal;
-    @FXML private TableColumn<Fiscal, String> colJornada;
-    @FXML private TableColumn<Fiscal, String> colMesa;
-    @FXML private TableColumn<Fiscal, String> colEdadFiscal;
-    @FXML private TableColumn<Fiscal, String> colCorreoFiscal;
-    @FXML private TableColumn<Fiscal, String> colTelefonoFiscal;
-    @FXML private TableColumn<Fiscal, String> colTipoFiscal;
-    @FXML private TableColumn<Fiscal, Boolean> colActivoFiscal;
-    @FXML private TableColumn<Fiscal, String> colCalleFiscal;
-    @FXML private TableColumn<Fiscal, Integer> colAlturaFiscal;
-    @FXML private TableColumn<Fiscal, String> colTipoPisoFiscal;
-    @FXML private TableColumn<Fiscal, String> colTipoDeparatementoFiscal;
-    @FXML private TableColumn<Fiscal, String> colEstablecimientoVota;
+    @FXML private TableView<FiscalListaDTO> tablaFiscales;
+    @FXML private TableColumn<FiscalListaDTO, Integer> colIdFiscal;
+    @FXML private TableColumn<FiscalListaDTO, String> colNombreFiscal;
+    @FXML private TableColumn<FiscalListaDTO, String> colApellidoFiscal;
+    @FXML private TableColumn<FiscalListaDTO, String> colJornada;
+    @FXML private TableColumn<FiscalListaDTO, Integer> colMesa;
+    @FXML private TableColumn<FiscalListaDTO, Integer> colEdadFiscal;
+    @FXML private TableColumn<FiscalListaDTO, String> colCorreoFiscal;
+    @FXML private TableColumn<FiscalListaDTO, String> colTelefonoFiscal;
+    @FXML private TableColumn<FiscalListaDTO, String> colTipoFiscal;
+    @FXML private TableColumn<FiscalListaDTO, String> colActivoFiscal;
+    @FXML private TableColumn<FiscalListaDTO, String> colCalleFiscal;
+    @FXML private TableColumn<FiscalListaDTO, Integer> colAlturaFiscal;
+    @FXML private TableColumn<FiscalListaDTO, String> colTipoPisoFiscal;
+    @FXML private TableColumn<FiscalListaDTO, String> colTipoDeparatamentoFiscal;
+    @FXML private TableColumn<FiscalListaDTO, String> colEstablecimientoVoto;
 
     //Declaramos los servicios
     private FiscalServicio servicio = new FiscalServicio();
@@ -78,9 +78,10 @@ public class FiscalesABMConrtoller {
     private MesaServicio mesaServicio = new MesaServicio();
 
 
-    private ObservableList<Fiscal> listaFiscales = FXCollections.observableArrayList();
-    private SortedList<Fiscal> listaOrdenada;
-    private List<Fiscal> listaBusqueda = new ArrayList<>();
+    //private ObservableList<Fiscal> listaFiscales = FXCollections.observableArrayList();
+    private SortedList<FiscalListaDTO> listaOrdenada;
+    private ObservableList<FiscalListaDTO> listaFiscales = FXCollections.observableArrayList();
+    private List<String> listaBusqueda = new ArrayList<>();
     //Elementos necesarios para la búsqueda de calles.
     private List<Calle> listaCalles;
     private List<Mesa> listaMesa;
@@ -90,72 +91,65 @@ public class FiscalesABMConrtoller {
     public void initialize() {
         gridFormulario.setMinWidth(620);
         GridPane.setHgrow(gridFormulario, Priority.ALWAYS);
-        colIdFiscal.setCellValueFactory(new PropertyValueFactory<>("idFiscal"));
-        colNombreFiscal.setCellValueFactory(new PropertyValueFactory<>("nombreFiscal"));
-        colApellidoFiscal.setCellValueFactory(new PropertyValueFactory<>("apellidoFiscal"));
-        colJornada.setCellValueFactory(celda -> {
-            Jornada jornada = celda.getValue().getJornada();
-            String tipo = jornada.getTipoJornada();
-            return new ReadOnlyObjectWrapper<>(tipo);
-        });
-        colMesa.setCellValueFactory(celda -> {
-            Mesa mesa = celda.getValue().getMesa();
-            String numero = (mesa != null) ? String.valueOf(mesa.getNumeroMesa()) : "Sin asignar";
-            return new ReadOnlyObjectWrapper<>(numero);
-        });
-        colEdadFiscal.setCellValueFactory(new PropertyValueFactory<>("edadFiscal"));
-        colCorreoFiscal.setCellValueFactory(new PropertyValueFactory<>("correoFiscal"));
-        colTelefonoFiscal.setCellValueFactory(new PropertyValueFactory<>("telefono"));
-        colEstablecimientoVota.setCellValueFactory(celda -> {
-            if (celda.getValue().getEstablecimientoVotacion() != null) {
-                Establecimiento est = celda.getValue().getEstablecimientoVotacion();
-                String nomEst = est.getNombreEstablecimiento();
-                return new ReadOnlyObjectWrapper<>(nomEst);
+        colIdFiscal.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().idFiscal()));
+        colNombreFiscal.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().nombreFiscal()));
+        colApellidoFiscal.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().apellidoFiscal()));
+        colJornada.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().jornada()));
+        //colMesa.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().numeroMesa()));
+        colMesa.setCellValueFactory(c -> new SimpleObjectProperty<>(
+                c.getValue().numeroMesa() == null ? null : c.getValue().numeroMesa()
+        ));
+        colEdadFiscal.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().edadFiscal()));
+        colCorreoFiscal.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().correoFiscal()));
+        colTelefonoFiscal.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().telefono()));
+        colEstablecimientoVoto.setCellValueFactory(celda -> {
+            if (celda.getValue().establecimientoVoto() != null) {
+                String nomEst = celda.getValue().establecimientoVoto();
+                return new SimpleStringProperty(nomEst);
             } else {
-                return new ReadOnlyObjectWrapper<>("Sin asignar");
+                return new SimpleStringProperty("Sin asignar");
             }
         });
         colTipoFiscal.setCellValueFactory(e -> {
-            if (e.getValue().getTipoFiscal() != null) {
-                TipoFiscal elTipo = e.getValue().getTipoFiscal();
-                String nombre = elTipo.getNombre();
-                return new ReadOnlyObjectWrapper<>(nombre);
+            if (e.getValue().tipoFiscal() != null) {
+                String nombre = e.getValue().tipoFiscal();
+                return new SimpleStringProperty(nombre);
             } else {
-                return new ReadOnlyObjectWrapper<>("No tiene");
+                return new SimpleStringProperty("No tiene");
             }
 
         });
         colCalleFiscal.setCellValueFactory(e -> {
-            Calle laCalle = e.getValue().getDireccion().getCalle();
-            String nombreCalle = laCalle.getNombre();
-            return new ReadOnlyObjectWrapper<>(nombreCalle);
+            String nombreCalle = e.getValue().calle();
+            return new SimpleStringProperty(nombreCalle);
         });
         colAlturaFiscal.setCellValueFactory(e -> {
-            Integer altura = e.getValue().getDireccion().getAltura();
-            return new ReadOnlyObjectWrapper<>(altura);
+            Integer altura = e.getValue().altura();
+            return new SimpleObjectProperty<>(altura);
         });
         colTipoPisoFiscal.setCellValueFactory(e -> {
-            if (e.getValue().getDireccion().getTipoPiso() != null) {
-                TipoPiso tpf = e.getValue().getDireccion().getTipoPiso();
-                String nombre = tpf.getNombre();
-                return new ReadOnlyObjectWrapper<>(nombre);
+            if (e.getValue().piso() != null) {
+                String nombre = e.getValue().piso();
+                return new SimpleStringProperty(nombre);
             } else {
-                return new ReadOnlyObjectWrapper<>("No tiene");
+                return new SimpleStringProperty("No tiene");
             }
 
         });
-        colTipoDeparatementoFiscal.setCellValueFactory(e -> {
-            if (e.getValue().getDireccion().getTipoDepartamento() != null) {
-                TipoDepartamento tdepto = e.getValue().getDireccion().getTipoDepartamento();
-                String nomDpto = tdepto.getNombre();
-                return new ReadOnlyObjectWrapper<>(nomDpto);
+        colTipoDeparatamentoFiscal.setCellValueFactory(e -> {
+            if (e.getValue().departamento() != null) {
+                String nomDpto = e.getValue().departamento();
+                return new SimpleStringProperty(nomDpto);
             } else {
-                return new ReadOnlyObjectWrapper<>("No tiene");
+                return new SimpleStringProperty("No tiene");
             }
 
         });
-        colActivoFiscal.setCellValueFactory(new PropertyValueFactory<>("activo"));
-        colActivoFiscal.setCellFactory(col -> new TableCell<Fiscal, Boolean>() {
+        colActivoFiscal.setCellValueFactory(celda -> new SimpleStringProperty(
+                Boolean.TRUE.equals(celda.getValue().activo()) ? "Sí" : "No"
+        ));
+        //colActivoFiscal.setCellValueFactory(new PropertyValueFactory<>("activo"));
+        /*colActivoFiscal.setCellFactory(col -> new TableCell<FiscalListaDTO, Boolean>() {
             @Override
             protected void updateItem(Boolean activo, boolean empty) {
                 super.updateItem(activo, empty);
@@ -165,7 +159,7 @@ public class FiscalesABMConrtoller {
                     setText(activo ? "Sí" : "No");
                 }
             }
-        });
+        });*/
         //Cargamos las calles para toda la vista desde la base
         cargarListadoCalle();
         //Cargamos las calles para el domilicio
@@ -273,7 +267,7 @@ public class FiscalesABMConrtoller {
         colMesa.setStyle("-fx-alignment: CENTER;");
         colEdadFiscal.setStyle("-fx-alignment: CENTER;");
         colTipoPisoFiscal.setStyle("-fx-alignment: CENTER_RIGHT;");
-        colTipoDeparatementoFiscal.setStyle("-fx-alignment: CENTER_RIGHT;");
+        colTipoDeparatamentoFiscal.setStyle("-fx-alignment: CENTER_RIGHT;");
         colActivoFiscal.setStyle("-fx-alignment: CENTER_RIGHT");
         colAlturaFiscal.setStyle("-fx-alignment: CENTER_RIGHT");
 
@@ -284,75 +278,77 @@ public class FiscalesABMConrtoller {
         });
     }
 
-    private void cargarFiscalEnFormulario(Fiscal fiscal) {
+    private void cargarFiscalEnFormulario(FiscalListaDTO fiscal) {
         etiquetaId.setText("ID");
-        txtValorId.setText(String.valueOf(fiscal.getIdFiscal()));
-        txtNombreFiscal.setText(fiscal.getNombreFiscal());
-        txtApellidoFiscal.setText(fiscal.getApellidoFiscal());
-        txtEdadFiscal.setText(String.valueOf(fiscal.getEdadFiscal()));
-        txtCorreoFiscal.setText(fiscal.getCorreoFiscal());
-        txtTelefonoFiscal.setText(fiscal.getTelefono());
-        if (fiscal.getMesa() != null) {
+        txtValorId.setText(String.valueOf(fiscal.idFiscal()));
+        txtNombreFiscal.setText(fiscal.nombreFiscal());
+        txtApellidoFiscal.setText(fiscal.apellidoFiscal());
+        txtEdadFiscal.setText(String.valueOf(fiscal.edadFiscal()));
+        txtCorreoFiscal.setText(fiscal.correoFiscal());
+        txtTelefonoFiscal.setText(fiscal.telefono());
+        if (fiscal.numeroMesa() != null) {
             labelMesa.setText("Mesa");
-            campoMesa.setText(String.valueOf(fiscal.getMesa().getNumeroMesa()));
+            campoMesa.setText(String.valueOf(fiscal.numeroMesa()));
         } else {
             labelMesa.setText("Mesa");
             campoMesa.setText("Sin asignación");
         }
-        if (fiscal.getEstablecimientoVotacion() != null) {
-            Integer votaId = fiscal.getEstablecimientoVotacion().getIdEstablecimiento();
+        if (fiscal.establecimientoVoto() != null) {
+            //Integer votaId = fiscal.getEstablecimientoVotacion().getIdEstablecimiento();
+            String nombreEst = fiscal.establecimientoVoto();
             elementoEstablecimientoVota.getItems()
                     .stream()
-                    .filter(vota -> vota != null && Objects.equals(vota.getIdEstablecimiento(), votaId))
+                    .filter(vota -> vota != null && Objects.equals(vota.getNombreEstablecimiento(), nombreEst))
                     .findFirst()
                     .ifPresent(elementoEstablecimientoVota::setValue);
         } else {
             elementoEstablecimientoVota.getSelectionModel().clearSelection();
         }
-        if (fiscal.getTipoFiscal() != null) {
-            Integer tfId = fiscal.getTipoFiscal().getIdTipoFiscal();
+        if (fiscal.tipoFiscal() != null) {
+            //Integer tfId = fiscal.getTipoFiscal().getIdTipoFiscal();
+            String tfNom = fiscal.tipoFiscal();
             elementoTipoFiscal.getItems()
                     .stream()
-                    .filter(tf -> tf != null && Objects.equals(tf.getIdTipoFiscal(), tfId))
+                    .filter(tf -> tf != null && Objects.equals(tf.getNombre(), tfNom))
                     .findFirst()
                     .ifPresent(elementoTipoFiscal::setValue);
         } else {
             elementoTipoFiscal.getSelectionModel().clearSelection();
         }
-        if (fiscal.getJornada() != null) {
-            Integer id = fiscal.getJornada().getIdJornada();
+        if (fiscal.jornada() != null) {
+            String tipoJor = fiscal.jornada();
             elementoJornada.getItems()
                     .stream()
-                    .filter(j -> j != null && Objects.equals(j.getIdJornada(), id))
+                    .filter(j -> j != null && Objects.equals(j.getTipoJornada(), tipoJor))
                     .findFirst()
                     .ifPresent(elementoJornada::setValue);
         } else {
             elementoJornada.getSelectionModel().clearSelection();
         }
 
-        campoBuscarCalle.setText(fiscal.getDireccion().getCalle().getNombre());
-        txtAlturaDireccionFiscal.setText(String.valueOf(fiscal.getDireccion().getAltura()));
-        if (fiscal.getDireccion() != null && fiscal.getDireccion().getTipoPiso() != null) {
-            Integer tpId = fiscal.getDireccion().getTipoPiso().getIdPiso();
+        campoBuscarCalle.setText(fiscal.calle());
+        txtAlturaDireccionFiscal.setText(String.valueOf(fiscal.altura()));
+        if (fiscal.piso() != null) {
+            String tpPiso = fiscal.piso();
             elementoTipoPisoFiscal.getItems()
                     .stream()
-                    .filter(tpf -> tpf != null && Objects.equals(tpf.getIdPiso(), tpId))
+                    .filter(tpf -> tpf != null && Objects.equals(tpf.getNombre(), tpPiso))
                     .findFirst()
                     .ifPresent(elementoTipoPisoFiscal::setValue);
         } else {
             elementoTipoPisoFiscal.getSelectionModel().clearSelection();
         }
-        if (fiscal.getDireccion() != null && fiscal.getDireccion().getTipoDepartamento() != null){
-            Integer tipoDpto = fiscal.getDireccion().getTipoDepartamento().getIdDepartamento();
+        if (fiscal.departamento() != null){
+            String tipoDpto = fiscal.departamento();
             elementoTipoDepartamento.getItems()
                     .stream()
-                    .filter(dpto -> dpto != null && Objects.equals(dpto.getIdDepartamento(), tipoDpto))
+                    .filter(dpto -> dpto != null && Objects.equals(dpto.getNombre(), tipoDpto))
                     .findFirst()
                     .ifPresent(elementoTipoDepartamento::setValue);
         } else {
             elementoTipoDepartamento.getSelectionModel().clearSelection();
         }
-        chkActivoFiscal.setSelected(fiscal.isActivo());
+        chkActivoFiscal.setSelected(fiscal.activo());
         msgFiscalGuardado.setText("");
 
     }
@@ -441,33 +437,39 @@ public class FiscalesABMConrtoller {
             //Armamos el dto que devuelve la tarea
             FiscalResponseDTO dtoFiscal = tarea.getValue();
             //Creamos el fiscal
-            Fiscal fiscal = FiscalMapper.aFiscalDeResponseDTO(dtoFiscal);
-            Task<Fiscal> tareaEnriquecer = new Task<Fiscal>() {
+            FiscalListaDTO fiscal = null;
+            try {
+                fiscal = FiscalMapper.aFiscalListaDeResponseDTO(dtoFiscal);
+            } catch (IOException |InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            FiscalListaDTO finalFiscal = fiscal;
+            Task<FiscalListaDTO> tareaEnriquecer = new Task<FiscalListaDTO>() {
                 @Override
-                protected Fiscal call() throws Exception {
-                    return controlCamposTabla(fiscal);
+                protected FiscalListaDTO call() throws Exception {
+                    return finalFiscal;
                 }
             };
             tareaEnriquecer.setOnSucceeded(e -> {
-                Fiscal paraTabla = tareaEnriquecer.getValue();
+                FiscalListaDTO paraTabla = tareaEnriquecer.getValue();
                 if (filtros.isSelected()) {
-                    if (paraTabla.isActivo() != chkFiscalActivoBusqueda.isSelected()) {
+                    if (paraTabla.activo() != chkFiscalActivoBusqueda.isSelected()) {
                         opcionesBusquedaPorFiltro();
                         return;
                     }
                     if (tipoFiscalBusqueda.getValue() != null &&
-                            !Objects.equals(tipoFiscalBusqueda.getValue().getIdTipoFiscal(), paraTabla.getTipoFiscal().getIdTipoFiscal())) {
+                            !Objects.equals(tipoFiscalBusqueda.getValue().getNombre(), paraTabla.tipoFiscal())) {
                         opcionesBusquedaPorFiltro();
                         return;
                     }
                     if (jornadaBusqueda.getValue() != null &&
-                            !Objects.equals(jornadaBusqueda.getValue().getIdJornada(), paraTabla.getJornada().getIdJornada())) {
+                            !Objects.equals(jornadaBusqueda.getValue().getTipoJornada(), paraTabla.jornada())) {
                         opcionesBusquedaPorFiltro();
                         return;
                     }
                 }
                 listaFiscales.add(tareaEnriquecer.getValue());
-                listaFiscales.sort(Comparator.comparing(f -> f.getApellidoFiscal() != null ? f.getApellidoFiscal() : null));
+                listaFiscales.sort(Comparator.comparing(f -> f.apellidoFiscal() != null ? f.apellidoFiscal() : null));
                 tablaFiscales.setItems(listaFiscales);
             });
             tareaEnriquecer.setOnFailed(e ->  mostrarAlerta("Error", "Falló la carga de la tabla " + tareaEnriquecer.getException().getMessage(), Alert.AlertType.ERROR));
@@ -588,11 +590,17 @@ public class FiscalesABMConrtoller {
                     nuevoDto.idJornada(),
                     null
             );
-            Fiscal fiscal = FiscalMapper.aFiscalDeResponseDTO(crearDto);
-            Task<Fiscal> enriquecer = new Task<Fiscal>() {
+            FiscalListaDTO fiscal = null;
+            try {
+                fiscal = FiscalMapper.aFiscalListaDeResponseDTO(crearDto);
+            } catch (IOException | InterruptedException e) {
+                mostrarAlerta("Error", "Falló la construcción de fiscal para la lista DTO", Alert.AlertType.ERROR);
+            }
+            FiscalListaDTO finalFiscal = fiscal;
+            Task<FiscalListaDTO> enriquecer = new Task<FiscalListaDTO>() {
                 @Override
-                protected Fiscal call() throws Exception {
-                    return controlCamposTabla(fiscal);
+                protected FiscalListaDTO call() throws Exception {
+                    return finalFiscal;
                 }
             };
             enriquecer.setOnSucceeded(e -> {
@@ -615,11 +623,11 @@ public class FiscalesABMConrtoller {
                     opcionesBusquedaPorFiltro();
                     return;
                 }
-                Fiscal actualizado = enriquecer.getValue();
+                FiscalListaDTO actualizado = enriquecer.getValue();
                 //Tomamos el índice en la lista
                 int index = -1;
                 for (int i = 0; i < listaFiscales.size(); i++) {
-                    if (Objects.equals(listaFiscales.get(i).getIdFiscal(), actualizado.getIdFiscal())) {
+                    if (Objects.equals(listaFiscales.get(i).idFiscal(), actualizado.idFiscal())) {
                         index = i;
                         break;
                     }
@@ -643,8 +651,19 @@ public class FiscalesABMConrtoller {
     }
 
 
+    private void controlCamposLsitadoTabla(FiscalListaDTO datos) {
+        try {
+            if (datos.calle() == null) {
+
+            }
+        } catch (Exception e) {
+            mostrarAlerta("Error", "Falló el armado de las columnas de la tabla ", Alert.AlertType.ERROR);
+        }
+    }
+
     private Fiscal controlCamposTabla(Fiscal datos) {
         try {
+
             if (datos.getDireccion() != null && datos.getDireccion().getCalle() != null) {
                 Calle c = calleServicio.buscarPorId(datos.getDireccion().getCalle().getIdCalle());
                 datos.getDireccion().setCalle(c);
@@ -686,10 +705,10 @@ public class FiscalesABMConrtoller {
     private void opcionesBusquedaPorFiltro() {
         Integer idTipoFiscal = tipoFiscalBusqueda.getValue() != null ? tipoFiscalBusqueda.getValue().getIdTipoFiscal() : null;
         Integer idJornada = jornadaBusqueda.getValue() != null ? jornadaBusqueda.getValue().getIdJornada() : null;
-        Boolean activo = chkFiscalActivoBusqueda.isSelected();
+        Boolean activo = chkFiscalActivoBusqueda.isIndeterminate() ? null : chkFiscalActivoBusqueda.isSelected();
         String apellido = apellidoBusqueda.getText();
 
-        if (apellido != null && apellido.isEmpty()) {
+        if (apellido == null || apellido.isEmpty()) {
             apellido = null;
         }
         cargarFiscalesTablaConFiltros(idTipoFiscal, idJornada, activo, apellido);
@@ -697,19 +716,15 @@ public class FiscalesABMConrtoller {
 
     private void cargarFiscalesTablaConFiltros(Integer idTipoFiscal, Integer idJornada, Boolean activo, String apellido) {
         listaFiscales.clear();
-        Task<List<Fiscal>> tarea = new Task<List<Fiscal>>() {
+        Task<List<FiscalListaDTO>> tarea = new Task<List<FiscalListaDTO>>() {
             @Override
-            protected List<Fiscal> call() throws Exception {
-                List<Fiscal> lista = servicio.listarFiscalesParaLasOpcionesDeFiltrado(idTipoFiscal, idJornada, activo, apellido);
-                for (Fiscal fiscal : lista) {
-                    controlCamposTabla(fiscal);
-                }
-                return lista;
+            protected List<FiscalListaDTO> call() throws Exception {
+                return servicio.listaParaTablas(idTipoFiscal, idJornada, activo, apellido);
             }
         };
         tarea.setOnSucceeded(evento -> {
             listaFiscales.setAll(tarea.getValue());
-            listaFiscales.sort(Comparator.comparing(f -> f.getApellidoFiscal() != null ? f.getApellidoFiscal() : ""));
+            listaFiscales.sort(Comparator.comparing(f -> f.apellidoFiscal() != null ? f.apellidoFiscal() : ""));
             tablaFiscales.setItems(listaFiscales);
         });
         tarea.setOnFailed(evento -> {
@@ -723,21 +738,16 @@ public class FiscalesABMConrtoller {
         listaFiscales.clear();
         filtros.selectedProperty().set(false);
         setEstadoGrupoFiltro(filtros.isSelected());
-        Task<List<Fiscal>> tarea = new Task<List<Fiscal>>() {
+        Task<List<FiscalListaDTO>> tarea = new Task<List<FiscalListaDTO>>() {
             @Override
-            protected List<Fiscal> call() throws Exception {
-                List<Fiscal> lista = servicio.listarFiscalesActivos();
-                for (Fiscal fiscal : lista) {
-                    //Buscamos y cargamos, si tiene, la calle en el objeto fiscal
-                    controlCamposTabla(fiscal);
-                }
-                return lista;
+            protected List<FiscalListaDTO> call() throws Exception {
+                return servicio.listarFiscales();
             }
         };
         tarea.setOnSucceeded(event -> {
             listaFiscales.setAll(tarea.getValue());
             //Establecemos la lista ordenada para la tabla
-            listaFiscales.sort(Comparator.comparing(f -> f.getApellidoFiscal() != null ? f.getApellidoFiscal() : ""));
+            listaFiscales.sort(Comparator.comparing(f -> f.apellidoFiscal() != null ? f.apellidoFiscal() : ""));
             tablaFiscales.setItems(listaFiscales);
         });
         tarea.setOnFailed(evento -> mostrarAlerta("Error", "No se pudo recuperar la lista de fiscales al cargar la tabla" +
@@ -832,26 +842,22 @@ public class FiscalesABMConrtoller {
 
     @FXML
     private void cargarFiscalesBusqueda() {
-        //listaFiscales.clear();
-        Task<List<Fiscal>> tarea = new Task<List<Fiscal>>() {
+        Task<List<String>> tarea = new Task<List<String>>() {
             @Override
-            protected List<Fiscal> call() throws Exception {
-                return servicio.listarFiscales();
+            protected List<String> call() throws Exception {
+                return servicio.todosFiscalesPorApellido();
             }
         };
         tarea.setOnSucceeded(evento -> {
             listaBusqueda.addAll(tarea.getValue());
             Platform.runLater(() -> {
                 configurarAutoCompletarFiscal(apellidoBusqueda, listaBusqueda);
-                /*apellidoBusqueda.textProperty().addListener((obs, ov, nv) -> {
-                    configurarAutoCompletarFiscal(apellidoBusqueda, listaBusqueda);
-                });*/
             });
         });
         tarea.setOnFailed(evento -> {
             Throwable ex = tarea.getException();
             ex.printStackTrace();
-            mostrarAlerta("Error", "No se pudo recuperar la lista de fiscales para la búsqueda", Alert.AlertType.ERROR);
+            mostrarAlerta("Error", "No se pudo recuperar la lista de fiscales para la búsqueda" + ex.getMessage(), Alert.AlertType.ERROR);
         });
         new Thread(tarea).start();
     }
@@ -888,7 +894,7 @@ public class FiscalesABMConrtoller {
         new Thread(tarea).start();
     }
 
-    private void configurarAutoCompletarFiscal(TextField campoBuscarFiscal, List<Fiscal> listado) {
+    private void configurarAutoCompletarFiscal(TextField campoBuscarFiscal, List<String> listado) {
         if (campoBuscarFiscal == null || listado == null) {
             mostrarAlerta("Error", "El campo de búsqueda de apellido de fiscal está vacía", Alert.AlertType.ERROR);
             return;
@@ -902,18 +908,18 @@ public class FiscalesABMConrtoller {
                 return;
             }
             String texto = nv.toLowerCase(Locale.ROOT);
-            List<Fiscal> coincidencias = listado.stream()
-                    .filter(f -> f.getApellidoFiscal().toLowerCase(Locale.ROOT).contains(texto))
+            List<String> coincidencias = listado.stream()
+                    .filter(f -> f.toLowerCase(Locale.ROOT).contains(texto))
                     .limit(10)
                     .toList();
             if (coincidencias.isEmpty()) {
                 sugerencias.hide();
                 return;
             }
-            for (Fiscal f : coincidencias) {
-                MenuItem item = new MenuItem(f.getApellidoFiscal());
+            for (String f : coincidencias) {
+                MenuItem item = new MenuItem(f);
                 item.setOnAction(a -> {
-                    campoBuscarFiscal.setText(f.getApellidoFiscal());
+                    campoBuscarFiscal.setText(f);
                     sugerencias.hide();
                 });
                 sugerencias.getItems().add(item);
@@ -926,7 +932,7 @@ public class FiscalesABMConrtoller {
         campoBuscarFiscal.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue) {
                 String texto = campoBuscarFiscal.getText();
-                boolean existe = listado.stream().anyMatch(f -> f.getApellidoFiscal().equalsIgnoreCase(texto));
+                boolean existe = listado.stream().anyMatch(f -> f.equalsIgnoreCase(texto));
                 if (!existe) {
                     campoBuscarFiscal.clear();
                 }
@@ -934,53 +940,6 @@ public class FiscalesABMConrtoller {
         });
     }
 
-    private <T> void configurarAutocompletar(TextField campoBusqueda, List<T> listado, Function<T, String> extractor, Consumer<T> onSelect) {
-        if (campoBusqueda == null || listado == null || extractor == null) {
-            mostrarAlerta("Error", "El campo o la lista está vacía ", Alert.AlertType.ERROR);
-            return;
-        }
-        ContextMenu menu = new ContextMenu();
-        campoBusqueda.textProperty().addListener((obs, ov, nv) -> {
-            menu.getItems().clear();
-            if (nv == null || nv.isBlank()) {
-                menu.hide();
-                return;
-            }
-            String texto = nv.toUpperCase(Locale.ROOT);
-            List<T> coincidencias = listado.stream()
-                    .filter(e -> {
-                       String valor = extractor.apply(e);
-                       return valor != null && valor.toUpperCase(Locale.ROOT).contains(texto);
-                    })
-                    .limit(10)
-                    .toList();
-            if (coincidencias.isEmpty()) {
-                menu.hide();
-                return;
-            }
-            for (T elemento : coincidencias) {
-                String mostrar = extractor.apply(elemento);
-                MenuItem item = new MenuItem(mostrar);
-                item.setOnAction(a -> {
-                    onSelect.accept(elemento);
-                    menu.hide();
-                });
-                menu.getItems().add(item);
-            }
-        });
-        //Chequeamos si se pierde el foco
-        campoBusqueda.focusedProperty().addListener((obs, ov, nv) -> {
-            if (!nv) {
-                String texto = campoBusqueda.getText();
-                boolean existe = listado.stream()
-                        .anyMatch(e -> extractor.apply(e).equalsIgnoreCase(texto));
-                if (!existe) {
-                    campoBusqueda.clear();
-                }
-            }
-        });
-
-    }
 
     //Este método es pora completar las calles del método cargarCalles()
     private void configurarAutocompletarCalle(TextField campoCalle, List<Calle> listado) {

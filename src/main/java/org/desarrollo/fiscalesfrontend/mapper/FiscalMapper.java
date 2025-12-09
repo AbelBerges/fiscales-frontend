@@ -1,10 +1,22 @@
 package org.desarrollo.fiscalesfrontend.mapper;
 
+import org.desarrollo.fiscalesfrontend.dto.FiscalListaDTO;
 import org.desarrollo.fiscalesfrontend.dto.FiscalRequestDTO;
 import org.desarrollo.fiscalesfrontend.dto.FiscalResponseDTO;
 import org.desarrollo.fiscalesfrontend.model.*;
+import org.desarrollo.fiscalesfrontend.service.*;
+
+import java.io.IOException;
 
 public class FiscalMapper {
+
+    private final static TipoFiscalServicio tipoFiscalServicio = new TipoFiscalServicio();
+    private final static JornadaServicio jornadaServicio = new JornadaServicio();
+    private final static EstablecimientoServicio establecimientoServicio = new EstablecimientoServicio();
+    private final static CalleServicio calleServicio = new CalleServicio();
+    private final static TipoPisoServicio tipoPisoServicio = new TipoPisoServicio();
+    private final static TipoDepartamentoServicio tipoDepartamentoServicio = new TipoDepartamentoServicio();
+    private final static MesaServicio mesaServicio = new MesaServicio();
 
     public static Fiscal aEntidadCreacion(FiscalRequestDTO dto) {
         //creamos los objetos para crear el fiscal
@@ -105,6 +117,55 @@ public class FiscalMapper {
         crear.setTelefono(dto.telefono());
         crear.setActivo(dto.activo());
         return crear;
+    }
+
+    public static FiscalListaDTO aFiscalListaDeResponseDTO(FiscalResponseDTO dto) throws IOException, InterruptedException {
+        TipoFiscal tf = new TipoFiscal();
+        Jornada j = new Jornada();
+        Establecimiento vota = new Establecimiento();
+        Calle c = new Calle();
+        TipoPiso tp = new TipoPiso();
+        TipoDepartamento tDpto = new TipoDepartamento();
+        Mesa m = new Mesa();
+        if (dto.idTipoFiscal() != null) {
+            tf = tipoFiscalServicio.buscarPorID(dto.idTipoFiscal());
+        }
+        if (dto.idJornada() != null) {
+            j = JornadaMapper.aEntidadCompleta(jornadaServicio.buscarPorId(dto.idJornada()));
+        }
+        if (dto.idEstablecimientoVotacion() != null) {
+            vota = EstablecimientoMapper.aEntidadModelo(establecimientoServicio.buscarPorId(dto.idEstablecimientoVotacion()));
+        }
+        if (dto.idCalle() != null) {
+            c = calleServicio.buscarPorId(dto.idCalle());
+        }
+        if (dto.idTipoPiso() != null) {
+            tp = tipoPisoServicio.buscarPorId(dto.idTipoPiso());
+        }
+        if (dto.idTipoDepartamento() != null) {
+            tDpto = tipoDepartamentoServicio.buscarPorId(dto.idTipoDepartamento());
+        }
+        if (dto.idMesa() != null) {
+            m = MesaMapper.aEntidadCompleta(mesaServicio.buscoMesaPorId(dto.idMesa()));
+        }
+        return new FiscalListaDTO(
+                dto.idFiscal(),
+                dto.nombreFiscal(),
+                dto.apellidoFiscal(),
+                dto.edadFiscal(),
+                dto.correoFiscal(),
+                dto.telefono(),
+                tf.getNombre(),
+                j.getTipoJornada(),
+                vota.getNombreEstablecimiento(),
+                null,
+                c.getNombre(),
+                dto.altura(),
+                tp.getNombre(),
+                tDpto.getNombre(),
+                m.getNumeroMesa(),
+                dto.activo()
+        );
     }
 
 

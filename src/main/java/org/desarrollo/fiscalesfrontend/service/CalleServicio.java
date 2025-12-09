@@ -14,7 +14,8 @@ import java.util.List;
 
 public class CalleServicio {
 
-    private static final String URL_BASE = "http://localhost:8080/calles";
+    //private static final String URL_BASE = "http://localhost:8080/calles";
+    private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/calles";
     private HttpClient cliente;
     private ObjectMapper mapear;
 

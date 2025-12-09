@@ -166,9 +166,9 @@
                         <TableColumn fx:id="colTipoFiscal" prefWidth="100" text="Tipo de Fiscal"> </TableColumn>
                         <TableColumn fx:id="colCalleFiscal" prefWidth="130" text="Calle"> </TableColumn>
                         <TableColumn fx:id="colTipoPisoFiscal" prefWidth="40" text="Piso"> </TableColumn>
-                        <TableColumn fx:id="colTipoDeparatementoFiscal" prefWidth="40" text="Depto"> </TableColumn>
+                        <TableColumn fx:id="colTipoDeparatamentoFiscal" prefWidth="40" text="Depto"> </TableColumn>
                         <TableColumn fx:id="colAlturaFiscal" prefWidth="50" text="Altura"> </TableColumn>
-                        <TableColumn fx:id="colEstablecimientoVota" prefWidth="150" text="Vota en"> </TableColumn>
+                        <TableColumn fx:id="colEstablecimientoVoto" prefWidth="150" text="Vota en"> </TableColumn>
                         <TableColumn fx:id="colActivoFiscal" prefWidth="60" text="Activo"> </TableColumn>
                     </columns>
                 </TableView>

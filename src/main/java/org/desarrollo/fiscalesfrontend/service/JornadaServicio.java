@@ -15,7 +15,8 @@ import java.util.List;
 
 public class JornadaServicio {
 
-    private final String URL_BASE = "http://localhost:8080/jornadas";
+    //private final String URL_BASE = "http://localhost:8080/jornadas";
+    private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/jornadas";
     private HttpClient cliente;
     private ObjectMapper mapeo;
 
