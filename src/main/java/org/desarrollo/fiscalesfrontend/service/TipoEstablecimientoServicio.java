@@ -2,6 +2,7 @@ package org.desarrollo.fiscalesfrontend.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.desarrollo.fiscalesfrontend.dto.TipoEstablecimientoMinimoDTO;
 import org.desarrollo.fiscalesfrontend.model.TipoEstablecimiento;
 
 import java.io.IOException;
@@ -12,8 +13,8 @@ import java.net.http.HttpResponse;
 import java.util.List;
 
 public class TipoEstablecimientoServicio {
-    //private static final String URL_BASE = "http://localhost:8080/tipoestablecimiento";
-    private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/tipoestablecimiento";
+    private static final String URL_BASE = "http://localhost:8080/tipoestablecimiento";
+    //private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/tipoestablecimiento";
     private HttpClient cliente;
     private ObjectMapper mapeo;
 
@@ -32,6 +33,19 @@ public class TipoEstablecimientoServicio {
             return mapeo.readValue(respuesta.body(), new TypeReference<List<TipoEstablecimiento>>() {});
         } else
             throw new IOException("Error al listar los tipos de establecimientos" + respuesta.statusCode());
+    }
+
+    public List<TipoEstablecimientoMinimoDTO> listarOptimizado() throws IOException, InterruptedException {
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(URL_BASE + "busqueda-optimizada"))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            return mapeo.readValue(respuesta.body(), new TypeReference<List<TipoEstablecimientoMinimoDTO>>() {});
+        } else {
+            throw new IOException("Error al recuperar los datos mínimos de tipos de establecimiento");
+        }
     }
 
     public TipoEstablecimiento buscarPorId(Integer id) throws IOException, InterruptedException{

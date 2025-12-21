@@ -15,8 +15,8 @@ import java.util.List;
 
 public class TipoFiscalServicio {
 
-    //private static final String URL_BASE = "http://localhost:8080/tiposfiscales";
-    private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/tiposfiscales";
+    private static final String URL_BASE = "http://localhost:8080/tiposfiscales";
+    //private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/tiposfiscales";
     private HttpClient cliente;
     private ObjectMapper mapeo;
 

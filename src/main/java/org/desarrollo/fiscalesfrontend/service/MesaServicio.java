@@ -17,8 +17,8 @@ import java.util.List;
 
 public class MesaServicio {
 
-    //private static final String URL_BASE = ("http://localhost:8080/mesas");
-    private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/mesas";
+    private static final String URL_BASE = ("http://localhost:8080/mesas");
+    //private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/mesas";
     private HttpClient cliente;
     private ObjectMapper mapeo;
 
@@ -143,6 +143,19 @@ public class MesaServicio {
                 .build();
         HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
         return mapeo.readValue(respuesta.body(), new TypeReference<AsignacionMesasRequestDTO>() {});
+    }
+
+    public List<Object[]> tomoEstadoCompletoIncompletoMesaEstablecimiento(Integer idEst) throws IOException, InterruptedException {
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(URL_BASE + "/calcular-estado-completo-incompleto/" + idEst))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            return mapeo.readValue(respuesta.body(), new TypeReference<List<Object[]>>() {});
+        } else {
+            throw new IOException("Error al recuperar el estado de las mesa del establecimiento");
+        }
     }
 
 }

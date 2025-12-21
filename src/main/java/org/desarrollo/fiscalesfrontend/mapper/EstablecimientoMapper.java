@@ -1,5 +1,7 @@
 package org.desarrollo.fiscalesfrontend.mapper;
 
+import org.desarrollo.fiscalesfrontend.dto.EstablecimientoDetalleEstadoDTO;
+import org.desarrollo.fiscalesfrontend.dto.EstablecimientoListaDTO;
 import org.desarrollo.fiscalesfrontend.dto.EstablecimientoRequestDTO;
 import org.desarrollo.fiscalesfrontend.dto.EstablecimientoResponseDTO;
 import org.desarrollo.fiscalesfrontend.model.*;
@@ -75,5 +77,32 @@ public class EstablecimientoMapper {
         return e;
     }
 
+    public static EstablecimientoListaDTO aEstablecimientoListaDTO(Establecimiento est) {
+        Long cantidad = null;
+        if (!est.getMesas().isEmpty()) {
+            cantidad = (long) est.getMesas().size();
+        }
+        String calle = est.getDireccion() != null && est.getDireccion().getCalle().getNombre() != null
+                ? est.getDireccion().getCalle().getNombre()
+                :null;
+        String piso = est.getDireccion() != null && est.getDireccion().getTipoPiso() != null
+                ? est.getDireccion().getTipoPiso().getNombre()
+                :null;
+        String departamento = est.getDireccion() != null && est.getDireccion().getTipoDepartamento() != null
+                ? est.getDireccion().getTipoDepartamento().getNombre()
+                :null;
+        return new EstablecimientoListaDTO(
+                est.getIdEstablecimiento(),
+                est.getNombreEstablecimiento(),
+                est.getDescripcion(),
+                cantidad,
+                calle,
+                est.getDireccion().getAltura(),
+                piso,
+                departamento,
+                est.getTipoEstablecimiento().getTipo(),
+                est.isActivo()
+        );
+    }
 
 }

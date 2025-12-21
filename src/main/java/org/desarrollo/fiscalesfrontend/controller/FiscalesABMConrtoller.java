@@ -3,6 +3,7 @@ package org.desarrollo.fiscalesfrontend.controller;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -14,10 +15,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import org.desarrollo.fiscalesfrontend.dto.*;
-import org.desarrollo.fiscalesfrontend.mapper.EstablecimientoMapper;
 import org.desarrollo.fiscalesfrontend.mapper.FiscalMapper;
-import org.desarrollo.fiscalesfrontend.mapper.JornadaMapper;
-import org.desarrollo.fiscalesfrontend.mapper.MesaMapper;
 import org.desarrollo.fiscalesfrontend.model.*;
 import org.desarrollo.fiscalesfrontend.service.*;
 import org.desarrollo.fiscalesfrontend.validaciones.Validar;
@@ -26,7 +24,6 @@ import java.io.IOException;
 import java.text.Normalizer;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class FiscalesABMConrtoller {
@@ -37,7 +34,7 @@ public class FiscalesABMConrtoller {
     @FXML private Label etiquetaId, txtValorId;
     @FXML private ComboBox<TipoPiso> elementoTipoPisoFiscal;
     @FXML private CheckBox chkActivoFiscal, chkFiscalActivoBusqueda;
-    @FXML private ComboBox<Establecimiento> elementoEstablecimientoVota;
+    @FXML private ComboBox<EstablecimientoListaDTO> elementoEstablecimientoVota;
     @FXML private ComboBox<TipoDepartamento> elementoTipoDepartamento;
     @FXML private TextField txtAlturaDireccionFiscal;
     @FXML private ComboBox<TipoFiscal> elementoTipoFiscal;
@@ -76,6 +73,7 @@ public class FiscalesABMConrtoller {
     private TipoFiscalServicio tipoFiscalServicio = new TipoFiscalServicio();
     private JornadaServicio jornadaServicio = new JornadaServicio();
     private MesaServicio mesaServicio = new MesaServicio();
+    private ChangeListener<String> listenerFiscal;
 
 
     //private ObservableList<Fiscal> listaFiscales = FXCollections.observableArrayList();
@@ -83,7 +81,7 @@ public class FiscalesABMConrtoller {
     private ObservableList<FiscalListaDTO> listaFiscales = FXCollections.observableArrayList();
     private List<String> listaBusqueda = new ArrayList<>();
     //Elementos necesarios para la búsqueda de calles.
-    private List<Calle> listaCalles;
+    private List<CalleMinimaDTO> listaCalles = new ArrayList<>();
     private List<Mesa> listaMesa;
     private List<Establecimiento> lstEstablecimientos;
 
@@ -148,23 +146,14 @@ public class FiscalesABMConrtoller {
         colActivoFiscal.setCellValueFactory(celda -> new SimpleStringProperty(
                 Boolean.TRUE.equals(celda.getValue().activo()) ? "Sí" : "No"
         ));
-        //colActivoFiscal.setCellValueFactory(new PropertyValueFactory<>("activo"));
-        /*colActivoFiscal.setCellFactory(col -> new TableCell<FiscalListaDTO, Boolean>() {
-            @Override
-            protected void updateItem(Boolean activo, boolean empty) {
-                super.updateItem(activo, empty);
-                if (empty || activo == null) {
-                    setText(null);
-                } else {
-                    setText(activo ? "Sí" : "No");
-                }
-            }
-        });*/
         //Cargamos las calles para toda la vista desde la base
         cargarListadoCalle();
         //Cargamos las calles para el domilicio
         campoBuscarCalle.setDisable(true);
         cargarCalles();
+
+        //Cargamos los apellidos para la opción de búsqueda por apellido
+        cargarFiscalesBusqueda();
         //Configuramos el texto para la carga asíncrona de tipo de pisos
         elementoTipoPisoFiscal.setPromptText("Seleccione un piso");
         //Cargamos los tipos de pisos
@@ -188,7 +177,7 @@ public class FiscalesABMConrtoller {
         elementoEstablecimientoVota.setPromptText("Donde vota el fiscal");
         //cargarEstablecimientoVota();
         cargarListasEnComboBox(elementoEstablecimientoVota, () -> estServicio.listarEstablecimientos());
-        construirComBox(elementoEstablecimientoVota, Establecimiento::getNombreEstablecimiento, "Donde vota el fiscal");
+        construirComBox(elementoEstablecimientoVota, EstablecimientoListaDTO::nombreEstablecimiento, "Donde vota el fiscal");
         //Tipos de fiscales para la búsqueda
         tipoFiscalBusqueda.setPromptText("Seleccionar");
         cargarListasEnComboBox(tipoFiscalBusqueda, () -> tipoFiscalServicio.listarTiposFiscales());
@@ -294,11 +283,10 @@ public class FiscalesABMConrtoller {
             campoMesa.setText("Sin asignación");
         }
         if (fiscal.establecimientoVoto() != null) {
-            //Integer votaId = fiscal.getEstablecimientoVotacion().getIdEstablecimiento();
             String nombreEst = fiscal.establecimientoVoto();
             elementoEstablecimientoVota.getItems()
                     .stream()
-                    .filter(vota -> vota != null && Objects.equals(vota.getNombreEstablecimiento(), nombreEst))
+                    .filter(vota -> vota != null && Objects.equals(vota.nombreEstablecimiento(), nombreEst))
                     .findFirst()
                     .ifPresent(elementoEstablecimientoVota::setValue);
         } else {
@@ -367,8 +355,8 @@ public class FiscalesABMConrtoller {
         }
 
         String textoCalle = campoBuscarCalle.getText().trim();
-        Calle seleccionada = listaCalles.stream()
-                .filter(c -> c.getNombre().equalsIgnoreCase(textoCalle))
+        CalleMinimaDTO seleccionada = listaCalles.stream()
+                .filter(c -> c.nombre().toUpperCase().contains(textoCalle))
                 .findFirst()
                 .orElse(null);
         if (seleccionada == null) {
@@ -390,14 +378,14 @@ public class FiscalesABMConrtoller {
         } catch (NumberFormatException e) {
             mostrarAlerta("Error", "La altura debe ser un número", Alert.AlertType.ERROR);
         }
-        Integer idCalle = seleccionada.getIdCalle();
+        Integer idCalle = seleccionada.idCalle() != null ? seleccionada.idCalle() : null;;
         Integer idTipoFiscal = elementoTipoFiscal.getValue().getIdTipoFiscal();
         Integer idJornada = elementoJornada.getValue() != null
                 ? elementoJornada.getValue().getIdJornada()
                 : null;
         //Integer idEstablecimientoVota = elementoEstablecimientoVota.getValue().getIdEstablecimiento();
         Integer idEstablecimientoVota = elementoEstablecimientoVota.getValue() != null
-                ? elementoEstablecimientoVota.getValue().getIdEstablecimiento()
+                ? elementoEstablecimientoVota.getValue().idEstablecimiento()
                 : null;
         Integer idTipoPiso = elementoTipoPisoFiscal.getValue() != null
                 ? elementoTipoPisoFiscal.getValue().getIdPiso()
@@ -502,7 +490,7 @@ public class FiscalesABMConrtoller {
         String nuevoCorreo = txtCorreoFiscal.getText().trim();
         String nuevoTel = txtTelefonoFiscal.getText().trim();
         Integer nuevoVota = elementoEstablecimientoVota.getValue() != null
-                ? elementoEstablecimientoVota.getValue().getIdEstablecimiento()
+                ? elementoEstablecimientoVota.getValue().idEstablecimiento()
                 : null;
         Integer nuevoTipoFiscal = elementoTipoFiscal.getValue() != null
                 ? elementoTipoFiscal.getValue().getIdTipoFiscal()
@@ -512,15 +500,16 @@ public class FiscalesABMConrtoller {
                 : null;
         Boolean estado = chkActivoFiscal.isSelected();
         String textoCalle = campoBuscarCalle.getText();
-        Calle nuevaCalle = listaCalles
+        CalleMinimaDTO nuevaCalle = listaCalles
                 .stream()
-                .filter(c -> c.getNombre().equals(textoCalle))
+                .filter(c -> c.nombre().toUpperCase().contains(textoCalle))
                 .findFirst()
                 .orElse(null);
         if (nuevaCalle == null) {
             mostrarAlerta("Error", "No se ha encontrado la calle", Alert.AlertType.ERROR);
+            return;
         }
-        Integer idNuevaCalle = nuevaCalle != null ? nuevaCalle.getIdCalle() : null;
+        Integer idNuevaCalle = nuevaCalle.idCalle() != null ? nuevaCalle.idCalle() : null;
         Integer nuevaAltura = 0;
         try {
             nuevaAltura = Integer.parseInt(txtAlturaDireccionFiscal.getText().trim());
@@ -530,6 +519,7 @@ public class FiscalesABMConrtoller {
             }
         } catch (NumberFormatException e) {
             mostrarAlerta("Erro", "La altura debe debe ser un número", Alert.AlertType.ERROR);
+            return;
         }
         Integer nuevoTipoPiso = elementoTipoPisoFiscal.getValue() != null
                 ? elementoTipoPisoFiscal.getValue().getIdPiso()
@@ -640,7 +630,6 @@ public class FiscalesABMConrtoller {
             });
             enriquecer.setOnFailed(e -> mostrarAlerta("Error", "No se pudo recargar la tabla", Alert.AlertType.ERROR));
             new Thread(enriquecer).start();
-            //cargarFiscalesTabla();
             limpiarCampos();
         });
         tarea.setOnFailed(evento -> {
@@ -661,45 +650,6 @@ public class FiscalesABMConrtoller {
         }
     }
 
-    private Fiscal controlCamposTabla(Fiscal datos) {
-        try {
-
-            if (datos.getDireccion() != null && datos.getDireccion().getCalle() != null) {
-                Calle c = calleServicio.buscarPorId(datos.getDireccion().getCalle().getIdCalle());
-                datos.getDireccion().setCalle(c);
-            }
-            if (datos.getDireccion() != null && datos.getDireccion().getTipoPiso() != null) {
-                TipoPiso tp = tipoPisoServicio.buscarPorId(datos.getDireccion().getTipoPiso().getIdPiso());
-                datos.getDireccion().setTipoPiso(tp);
-            }
-            if (datos.getDireccion() != null && datos.getDireccion().getTipoDepartamento() != null) {
-                TipoDepartamento tpd = tipoDeptoServicio.buscarPorId(datos.getDireccion().getTipoDepartamento().getIdDepartamento());
-                datos.getDireccion().setTipoDepartamento(tpd);
-            }
-            if (datos.getTipoFiscal() != null) {
-                TipoFiscal tpf = tipoFiscalServicio.buscarPorID(datos.getTipoFiscal().getIdTipoFiscal());
-                datos.setTipoFiscal(tpf);
-            }
-            if (datos.getEstablecimientoVotacion() != null && datos.getEstablecimientoVotacion().getIdEstablecimiento() != null) {
-                EstablecimientoResponseDTO dto = estServicio.buscarPorId(datos.getEstablecimientoVotacion().getIdEstablecimiento());
-                Establecimiento est = EstablecimientoMapper.aEntidadModelo(dto);
-                datos.setEstablecimientoVotacion(est);
-            }
-            if (datos.getMesa() != null && datos.getMesa().getIdMesa() !=null) {
-                MesaResponseDTO dto = mesaServicio.buscoMesaPorId(datos.getMesa().getIdMesa());
-                Mesa mesa = MesaMapper.aEntidadCompleta(dto);
-                datos.setMesa(mesa);
-            }
-            if (datos.getJornada() != null) {
-                JornadaResponseDTO jdnDto = jornadaServicio.buscarPorId(datos.getJornada().getIdJornada());
-                Jornada jornada = JornadaMapper.aEntidadCompleta(jdnDto);
-                datos.setJornada(jornada);
-            }
-        } catch (Exception e) {
-            mostrarAlerta("Error", "Error al controlar los datos de la tabla", Alert.AlertType.ERROR);
-        }
-        return datos;
-    }
 
     @FXML
     private void opcionesBusquedaPorFiltro() {
@@ -778,7 +728,7 @@ public class FiscalesABMConrtoller {
 
     private void cargarListadoCalle() {
         try {
-            listaCalles = calleServicio.listarCalles();
+            listaCalles = calleServicio.recuperoCallePorNombre();
         } catch (IOException e) {
             mostrarAlerta("Error", "IOExecption al listar las calles", Alert.AlertType.ERROR);
         } catch (InterruptedException e) {
@@ -805,7 +755,7 @@ public class FiscalesABMConrtoller {
 
     private String normalizar(String texto) {
         if (texto == null) return "";
-        String nfd = java.text.Normalizer.normalize(texto, Normalizer.Form.NFD);
+        String nfd = Normalizer.normalize(texto, Normalizer.Form.NFD);
         return nfd.replaceAll("\\p{M}", ""); // elimina diacríticos (acentos)
     }
 
@@ -865,11 +815,11 @@ public class FiscalesABMConrtoller {
 
     //
     private void cargarCalles() {
-        Task<List<Calle>> tarea = new Task<List<Calle>>() {
+        Task<List<CalleMinimaDTO>> tarea = new Task<List<CalleMinimaDTO>>() {
             @Override
-            protected List<Calle> call() throws Exception {
+            protected List<CalleMinimaDTO> call() throws Exception {
                 if (listaCalles == null) {
-                    calleServicio.listarCalles();
+                    calleServicio.recuperoCallePorNombre();
                 }
                 return listaCalles;
             }
@@ -899,9 +849,15 @@ public class FiscalesABMConrtoller {
             mostrarAlerta("Error", "El campo de búsqueda de apellido de fiscal está vacía", Alert.AlertType.ERROR);
             return;
         }
+
+        //si ya tiene un listener activo, lo quito
+        if (listenerFiscal != null) {
+            campoBuscarFiscal.textProperty().removeListener(listenerFiscal);
+        }
+
         //Armamos el context menu para mostrar los fiscales
         ContextMenu sugerencias = new ContextMenu();
-        campoBuscarFiscal.textProperty().addListener((obs, ov, nv) -> {
+        listenerFiscal = (obs, ov, nv) -> {
             sugerencias.getItems().clear();
             if (nv == null || nv.isBlank()) {
                 sugerencias.hide();
@@ -927,7 +883,8 @@ public class FiscalesABMConrtoller {
             if (!sugerencias.isShowing()) {
                 sugerencias.show(campoBuscarFiscal, Side.BOTTOM, 0, 0);
             }
-        });
+        };
+        campoBuscarFiscal.textProperty().addListener(listenerFiscal);
         //Validamos el foco. Permitir valores válidos
         campoBuscarFiscal.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue) {
@@ -942,7 +899,7 @@ public class FiscalesABMConrtoller {
 
 
     //Este método es pora completar las calles del método cargarCalles()
-    private void configurarAutocompletarCalle(TextField campoCalle, List<Calle> listado) {
+    private void configurarAutocompletarCalle(TextField campoCalle, List<CalleMinimaDTO> listado) {
         if (campoCalle == null || listado == null) {
             mostrarAlerta("Error", "El campo de búsqueda o la lista de calles está vacía", Alert.AlertType.ERROR);
             return;
@@ -956,18 +913,19 @@ public class FiscalesABMConrtoller {
                 return;
             }
             String texto = valorNuevo.toLowerCase(Locale.ROOT);
-            List<Calle> coincidencias = listado.stream()
-                    .filter(c -> c.getNombre().toLowerCase(Locale.ROOT).contains(texto))
+            List<CalleMinimaDTO> coincidencias = listado.stream()
+                    .filter(c -> c.nombre().toLowerCase(Locale.ROOT).contains(texto))
                     .limit(10)
                     .toList();
             if (coincidencias.isEmpty()) {
                 sugerencias.hide();
                 return;
             }
-            for (Calle cl : coincidencias) {
-                MenuItem item = new MenuItem(cl.getNombre());
+            for (CalleMinimaDTO cl : coincidencias) {
+                MenuItem item = new MenuItem(cl.nombre());
                 item.setOnAction(i -> {
-                    campoCalle.setText(cl.getNombre());
+                    campoCalle.setText(cl.nombre());
+                    campoCalle.setUserData(cl);
                     sugerencias.hide();
                 });
                 sugerencias.getItems().add(item);
@@ -981,7 +939,7 @@ public class FiscalesABMConrtoller {
         campoCalle.focusedProperty().addListener((observable, osVal,newVal) -> {
             if (!newVal) {
                 String texto = campoCalle.getText();
-                boolean existe = listado.stream().anyMatch(e -> e.getNombre().equalsIgnoreCase(texto));
+                boolean existe = listado.stream().anyMatch(e -> e.nombre().equalsIgnoreCase(texto));
                 if (!existe) {
                     campoCalle.clear();
                 }

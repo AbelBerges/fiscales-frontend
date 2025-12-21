@@ -2,9 +2,7 @@ package org.desarrollo.fiscalesfrontend.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.desarrollo.fiscalesfrontend.dto.EstablecimientoMesasDTO;
-import org.desarrollo.fiscalesfrontend.dto.EstablecimientoRequestDTO;
-import org.desarrollo.fiscalesfrontend.dto.EstablecimientoResponseDTO;
+import org.desarrollo.fiscalesfrontend.dto.*;
 import org.desarrollo.fiscalesfrontend.mapper.EstablecimientoMapper;
 import org.desarrollo.fiscalesfrontend.model.Establecimiento;
 
@@ -17,8 +15,8 @@ import java.util.List;
 
 public class EstablecimientoServicio {
 
-    //private static final String URL_BASE = "http://localhost:8080/establecimientos";
-    private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/establecimientos";
+    private static final String URL_BASE = "http://localhost:8080/establecimientos";
+    //private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/establecimientos";
     private HttpClient cliente;
     private ObjectMapper mapeo;
 
@@ -32,21 +30,20 @@ public class EstablecimientoServicio {
         return cliente;
     }
 
-    public List<Establecimiento> listarEstablecimientos() throws IOException, InterruptedException {
+    public List<EstablecimientoListaDTO> listarEstablecimientos() throws IOException, InterruptedException {
         HttpRequest requerimiento = HttpRequest.newBuilder()
                 .uri(URI.create(URL_BASE))
                 .GET()
                 .build();
         HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
         if (respuesta.statusCode() == 200) {
-            List<EstablecimientoResponseDTO> listaDTO = mapeo.readValue(respuesta.body(), new TypeReference<List<EstablecimientoResponseDTO>>() {});
-            return listaDTO.stream().map(EstablecimientoMapper::aEntidadModelo).toList();
+             return mapeo.readValue(respuesta.body(), new TypeReference<List<EstablecimientoListaDTO>>() {});
         } else {
             throw new IOException("Error al listar los establecimientos " + respuesta.statusCode());
         }
     }
 
-    public EstablecimientoResponseDTO guardarEstablecimiento(EstablecimientoRequestDTO dto) throws IOException, InterruptedException {
+    public EstablecimientoListaDTO guardarEstablecimiento(EstablecimientoRequestDTO dto) throws IOException, InterruptedException {
         String json = mapeo.writeValueAsString(dto);
 
         HttpRequest requerimiento = HttpRequest.newBuilder()
@@ -58,7 +55,7 @@ public class EstablecimientoServicio {
         if (respuesta.statusCode() != 200 && respuesta.statusCode() != 201) {
             throw new RuntimeException("Error HTTP al guardar " + respuesta.statusCode());
         }
-        return mapeo.readValue(respuesta.body(), EstablecimientoResponseDTO.class);
+        return mapeo.readValue(respuesta.body(), EstablecimientoListaDTO.class);
     }
 
     public boolean actualizarEstablecimiento(Integer elId, EstablecimientoRequestDTO dto) throws IOException, InterruptedException {
@@ -106,9 +103,75 @@ public class EstablecimientoServicio {
         }
     }
 
-    public EstablecimientoResponseDTO buscarPorId(Integer elId) throws IOException, InterruptedException{
+    public EstablecimientoListaDTO buscoPorIdOptimizado(Integer id) throws IOException, InterruptedException {
         HttpRequest requerimiento = HttpRequest.newBuilder()
-                .uri(URI.create(URL_BASE + "/" + elId))
+                .uri(URI.create(URL_BASE + "/lista/" + id))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            return mapeo.readValue(respuesta.body(), EstablecimientoListaDTO.class);
+        } else {
+            throw new IOException("Error al recuperar el establecimiento para la tabla");
+        }
+    }
+
+    public String recuperarElTipoEstablecimientoPorIdEst(Integer idEstablecimiento) throws IOException, InterruptedException {
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(URL_BASE + "/busco-tipo-estableciento-porid/" + idEstablecimiento))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            return mapeo.readValue(respuesta.body(), new TypeReference<String>() {});
+        } else {
+            throw new IOException("Error al recuperar el tipo de establecimiento por el id del establecimiento");
+        }
+    }
+
+    public List<EstablecimientoEstadoDTO> listadoComoBoxAsignarFiscales() throws IOException, InterruptedException{
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(URL_BASE + "/evaluar-estados"))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            return mapeo.readValue(respuesta.body(), new TypeReference<List<EstablecimientoEstadoDTO>>() {});
+        } else {
+            throw new IOException("Error al recuperar los establecimientos con sus estados");
+        }
+    }
+
+    public String recuperarEstadoDelEstablecimiento(Integer idEst) throws IOException, InterruptedException {
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(URL_BASE + idEst + "/mesas/estado"))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            return mapeo.readValue(respuesta.body(), new TypeReference<String>() {});
+        } else {
+            throw new IOException("Error al recuperar el estado del establecimiento");
+        }
+    }
+
+    public EstablecimientoDetalleEstadoDTO recuperarEstadosDeLosEstablecimientos(Integer idEst) throws IOException, InterruptedException {
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(URL_BASE + "/estado/" + idEst))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            return mapeo.readValue(respuesta.body(), new TypeReference<EstablecimientoDetalleEstadoDTO>() {});
+        } else {
+            throw new IOException("Error al recuperar la lista de los establecimientos con su estado");
+        }
+    }
+
+    public EstablecimientoResponseDTO buscarPorId(Integer elId) throws IOException, InterruptedException{
+        String url = URL_BASE + "/" + elId;
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(url))
                 .GET()
                 .build();
         HttpResponse<String> respuesa = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());

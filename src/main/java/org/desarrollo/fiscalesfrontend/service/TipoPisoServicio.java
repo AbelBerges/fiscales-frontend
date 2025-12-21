@@ -13,8 +13,8 @@ import java.util.List;
 
 public class TipoPisoServicio {
 
-    //private static final String URL_BASE = "http://localhost:8080/tipospisos";
-    private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/tipospisos";
+    private static final String URL_BASE = "http://localhost:8080/tipospisos";
+    //private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/tipospisos";
     private HttpClient cliente;
     private ObjectMapper mapeador;
 

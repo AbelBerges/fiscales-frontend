@@ -186,6 +186,12 @@
     -fx-text-fill: rgb(93, 147, 248);
 }
 
+.titulo-aclaracion {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgb(255, 134, 134);
+}
+
 .radio-filtro {
     -fx-font-size: 12px;
 }
@@ -193,6 +199,11 @@
 .combo-filtro {
     -fx-pref-width: 160px;
     -fx-font-size: 12px;
+}
+
+.combo-asignaciones {
+    -fx-pref-width: 250;
+    -fx-font-size: 13px;
 }
 
 .text-filtro {
@@ -216,4 +227,27 @@
     -fx-font-size: 13px;
     -fx-font-weight: bold;
     -fx-text-fill: rgb(93, 147, 248);
+}
+
+.boton-activo {
+    -fx-background-color: #007aff;   /* azul macOS */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.boton-activo:hover {
+    -fx-background-color: #0065d1;
+}
+
+.est-completo {
+    -fx-text-fill: #2ecc71;   /* verde */
+    -fx-font-weight: bold;
+}
+
+.est-incompleto {
+    -fx-text-fill: #f39c12;   /* naranja */
+}
+
+.est-vacio {
+    -fx-text-fill: #95a5a6;   /* gris */
 }

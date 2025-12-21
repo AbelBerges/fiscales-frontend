@@ -2,12 +2,16 @@ package org.desarrollo.fiscalesfrontend.model;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Establecimiento {
     @JsonAlias({"id_establecimiento", "idEstablecimiento"})
     private Integer idEstablecimiento;
     @JsonAlias({"nombre_establecimiento", "nombre"})
     private String nombre;
     private String descripcion;
+    private List<Mesa> mesas = new ArrayList<>();
     private Direccion direccion;
     private TipoEstablecimiento tipoEstablecimiento;
     private boolean activo;
@@ -51,6 +55,22 @@ public class Establecimiento {
 
     public String getDescripcion() {
         return descripcion;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public List<Mesa> getMesas() {
+        return mesas;
+    }
+
+    public void setMesas(List<Mesa> mesas) {
+        this.mesas = mesas;
     }
 
     public void setDescripcion(String descripcion) {

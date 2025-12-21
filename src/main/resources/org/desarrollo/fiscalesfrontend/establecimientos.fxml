@@ -12,8 +12,8 @@
 
     <top>
         <HBox spacing="10" style="-fx-padding: 10">
-            <Button text="ABM Establecimiento" onAction="#abrirABMEstablecimiento"> </Button>
-            <Button text="Administración Mesas" onAction="#abrirEstablecimientosMesas"> </Button>
+            <Button fx:id="btnABM" text="ABM Establecimiento" onAction="#abrirABMEstablecimiento"> </Button>
+            <Button fx:id="btnMesas" text="Administrar Mesas por Establecimiento" onAction="#abrirEstablecimientosMesas"> </Button>
         </HBox>
     </top>
 

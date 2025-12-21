@@ -12,7 +12,7 @@
 
     <top>
         <HBox spacing="10" style="-fx-padding: 10">
-            <Button text="ABM de Fiscales" onAction="#abrirABM"> </Button>
+            <Button fx:id="btnABMFiscal" text="ABM de Fiscales" onAction="#abrirABM"> </Button>
         </HBox>
     </top>
 

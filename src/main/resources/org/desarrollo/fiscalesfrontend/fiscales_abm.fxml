@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.desarrollo.fiscalesfrontend.controller.FiscalesABMConrtoller">
+<BorderPane xmlns="http://javafx.com/javafx/21.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.desarrollo.fiscalesfrontend.controller.FiscalesABMConrtoller">
 
     <!-- Margen general -->
     <padding>
@@ -82,9 +82,11 @@
                     <Label text="Domicilio del fiscal" styleClass="domicilio" GridPane.columnIndex="4" GridPane.columnSpan="3" GridPane.rowIndex="1">
                     </Label>
 
-                    <Label text="Calle" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+                    <Label text="Calle" GridPane.columnIndex="4" GridPane.rowIndex="2" minWidth="60"/>
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="4" GridPane.rowIndex="2" GridPane.halignment="RIGHT"> </Label>
                     <TextField fx:id="campoBuscarCalle" prefWidth="250" promptText="Busque la calle..." GridPane.columnIndex="5" GridPane.rowIndex="2" />
-                    <Label text="Altura" GridPane.columnIndex="6" GridPane.rowIndex="2" />
+                    <Label text="Altura" GridPane.columnIndex="6" GridPane.rowIndex="2" minWidth="60"/>
+                    <Label text="*" styleClass="requerido" GridPane.columnIndex="6" GridPane.rowIndex="2" GridPane.halignment="RIGHT"> </Label>
                     <TextField fx:id="txtAlturaDireccionFiscal" GridPane.columnIndex="7" GridPane.rowIndex="2" />
 
 
@@ -145,7 +147,7 @@
                 <ComboBox fx:id="tipoFiscalBusqueda" styleClass="combo-filtro"> </ComboBox>
                 <CheckBox fx:id="chkBusquedaJornada" text="Jornada" styleClass="check-filtro"> </CheckBox>
                 <ComboBox fx:id="jornadaBusqueda" styleClass="combo-filtro"> </ComboBox>
-                <CheckBox fx:id="chkPorApellido" text="Apellido" styleClass="radio-filtro" onAction="#cargarFiscalesBusqueda"> </CheckBox>
+                <CheckBox fx:id="chkPorApellido" text="Apellido" styleClass="radio-filtro"> </CheckBox>
                 <TextField fx:id="apellidoBusqueda" styleClass="text-filtro"> </TextField>
                 <CheckBox text="Activo" fx:id="chkFiscalActivoBusqueda" selected="true" styleClass="check-filtro"> </CheckBox>
                 <Button fx:id="btnBusquedaFiltros" text="Buscar" onAction="#opcionesBusquedaPorFiltro"> </Button>

@@ -12,9 +12,8 @@
 
     <top>
         <HBox spacing="10" style="-fx-padding: 10">
-            <Button text="Asignar Fiscales" onAction="#abrirAsignarFiscales"> </Button>
-            <Button text="Fiscales asignados"> </Button>
-            <Button text="Fiscales Por establecimiento"> </Button>
+            <Button fx:id="btnAsignarFiscales" text="Asignar Fiscales a Mesas" onAction="#abrirAsignarFiscales"> </Button>
+            <Button fx:id="btnListarFiscalesEstablecimiento" text="Listar Fiscales Por establecimiento" onAction="#abrirListaPorEstablecimiento"> </Button>
         </HBox>
     </top>
 

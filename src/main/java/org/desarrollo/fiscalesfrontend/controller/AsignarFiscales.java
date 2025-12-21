@@ -18,7 +18,7 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
-import org.desarrollo.fiscalesfrontend.dto.AsignacionMesasRequestDTO;
+import org.desarrollo.fiscalesfrontend.dto.*;
 import org.desarrollo.fiscalesfrontend.mapper.JornadaMapper;
 import org.desarrollo.fiscalesfrontend.model.*;
 import org.desarrollo.fiscalesfrontend.service.*;
@@ -30,7 +30,7 @@ import java.util.function.Function;
 
 public class AsignarFiscales {
 
-    @FXML private ComboBox<Establecimiento> comboBoxEstablecimiento;
+    @FXML private ComboBox<EstablecimientoEstadoDTO> comboBoxEstablecimiento;
     @FXML private ComboBox<Fiscal> comboBoxFiscalGeneral;
     @FXML private FlowPane contenedorMesas;
     @FXML private ScrollPane scrollMesas;
@@ -47,7 +47,7 @@ public class AsignarFiscales {
 
     //Declaramos elementos que vamos a usar en el controlador
     private ObservableList<Establecimiento> listaEst = FXCollections.observableArrayList();
-    private ObservableList<Mesa> mesasSeleccionadas = FXCollections.observableArrayList();
+    private ObservableList<MesaEstadoDTO> mesasSeleccionadas = FXCollections.observableArrayList();
     private List<Mesa>  listaMesas = new ArrayList<>();
     private ObservableList<Fiscal> fiscalesSinMesa = FXCollections.observableArrayList();
     private ObservableList<Fiscal> fiscalesJornadaManana = FXCollections.observableArrayList();
@@ -55,7 +55,7 @@ public class AsignarFiscales {
     private ObservableList<Fiscal> fiscalesJornadaCompleta = FXCollections.observableArrayList();
     private ObservableList<Fiscal> fiscalesGenerales = FXCollections.observableArrayList();
     private ObservableList<Fiscal> fiscalesGeneralesCombo = FXCollections.observableArrayList();
-
+    private boolean refrescandoComoBox = false;
     @FXML
     private void initialize() {
         scrollMesas.setFitToWidth(true);
@@ -67,6 +67,24 @@ public class AsignarFiscales {
         //Iniciamos el estado del combobox
         comboBoxEstablecimiento.setPromptText("Seleccione un establecimiento");
         cargarEstablecimientos();
+        comboBoxEstablecimiento.setCellFactory(e -> new ListCell<>() {
+            @Override
+            protected void updateItem(EstablecimientoEstadoDTO item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    getStyleClass().removeAll("est-vacio", "est-incompleto", "est-completo");
+                    return;
+                }
+                setText(item.nombreEstablecimiento());
+                getStyleClass().removeAll("est-vacio", "est-incompleto", "est-completo");
+                switch (item.estado()) {
+                    case "COMPLETO" -> getStyleClass().add("est-completo");
+                    case "INCOMPLETO" -> getStyleClass().add("est-incompleto");
+                    case "VACIO" -> getStyleClass().add("est-vacio");
+                }
+            }
+        });
         comboBoxFiscalGeneral.setPromptText("Seleccione un Fiscal General");
         comboBoxFiscalGeneral.setCellFactory(lv -> new ListCell<>() {
             @Override
@@ -75,6 +93,9 @@ public class AsignarFiscales {
                 setText(!vacio || item != null ? item.getNombreFiscal() + ", " + item.getApellidoFiscal() : null);
             }
         });
+        comboBoxEstablecimiento.setButtonCell(
+                comboBoxEstablecimiento.getCellFactory().call(null)
+        );
         comboBoxFiscalGeneral.setButtonCell(new ListCell<>() {
             @Override
             protected void updateItem(Fiscal item, boolean vacio) {
@@ -85,7 +106,9 @@ public class AsignarFiscales {
         //cargarComboFiscalesGenerales();
 
         comboBoxEstablecimiento.valueProperty().addListener((obs, ov,nv) -> {
-            cargarMesasPorEstablecimiento(nv.getIdEstablecimiento());
+            if (refrescandoComoBox) return;
+            if (nv == null) return;
+            cargarMesasPorEstablecimiento(nv.idEstablecimiento());
         });
     }
 
@@ -95,7 +118,7 @@ public class AsignarFiscales {
             @Override
             protected Void call() throws Exception {
                 Integer idFiscal = comboBoxFiscalGeneral.getValue().getIdFiscal();
-                Integer idEst = comboBoxEstablecimiento.getValue().getIdEstablecimiento();
+                Integer idEst = comboBoxEstablecimiento.getValue().idEstablecimiento();
                 fiscalServicio.asignoFiscalGeneral(idFiscal, idEst);
                 return null;
             }
@@ -171,13 +194,15 @@ public class AsignarFiscales {
                     //Armamos los objetos por mesa
                     TipoFiscal tf = tipoFiscalServicio.buscarFiscalPorNombre("Mesa");
                     construirListasObservables(tf);
-                    AsignacionMesasRequestDTO dto = mesaServicio.mesasPorEstablecimiento(elId);
+                    //AsignacionMesasRequestDTO dto = mesaServicio.mesasPorEstablecimiento(elId);
+                    EstablecimientoDetalleEstadoDTO dto = servicoEst.recuperarEstadosDeLosEstablecimientos(elId);
                     Platform.runLater(() -> {
-                        for (Integer i : dto.numerosMesa()) {
+                        for (MesaEstadoDTO i : dto.mesas()) {
                             try {
-                                Mesa temp = mesaServicio.buscoPorNumeroMesa(i);
-                                mesasSeleccionadas.add(temp);
-                                agregarFilaMesa(temp);
+                                Integer temp = i.numeroMesa();
+                                Mesa mesa = mesaServicio.buscoPorNumeroMesa(temp);
+                                mesasSeleccionadas.add(i);
+                                agregarFilaMesa(mesa);
                             } catch (IOException | InterruptedException e) {
                                 mostrarMensaje("Error", "No se pudo recuperar la mesa", Alert.AlertType.ERROR);
                             }
@@ -187,7 +212,6 @@ public class AsignarFiscales {
                     return null;
                 }
             };
-            //armarMesas.setOnSucceeded(evento -> System.out.println("se cargaron las mesas"));
             armarMesas.setOnFailed(evento -> {
                 Throwable ex = armarMesas.getException();
                 ex.printStackTrace();
@@ -198,6 +222,9 @@ public class AsignarFiscales {
         } catch (Exception e) {
             mostrarMensaje("Error", "No se pudo cagar la mesa en el panel " + e.getMessage(), Alert.AlertType.ERROR);
         }
+    }
+
+    private void cargarMesasConEstado(Integer idEst) {
 
     }
 
@@ -283,32 +310,17 @@ public class AsignarFiscales {
             contenedorMesa.getStyleClass().add("mesa");
         }
             //contenedorMesa.getStyleClass().add("mesa");
-        //contenedorMesa.setStyle("");
-        //Aplicar estilo y bloqueos de forma consistente
+
         if (esVacia) {
-            //animarCambio(contenedorMesa);
+
             contenedorMesa.getStyleClass().add("mesa-vacia");
-            /*contenedorMesa.setStyle(
-                    "-fx-background-color: rgba(167, 167, 167, 0.478);" +
-                    "-fx-border-color: rgb(189, 189, 189);" +
-                    "-fx-border-width: 1;" +
-                    "-fx-border-radius: 6;" +
-                    "-fx-background-radius: 6;"
-            );*/
+
             filaCompleta.setDisable(false);
             filaManana.setDisable(false);
             filaTarde.setDisable(false);
         } else if (esCompleta) {
             // estilo verde
-            //animarCambio(contenedorMesa);
             contenedorMesa.getStyleClass().add("mesa-completa");
-            /*contenedorMesa.setStyle(
-                    "-fx-background-color: rgb(152, 168, 134, 0.356);" +
-                    "-fx-border-color: rgba(94, 168, 94, 0.781);" +
-                    "-fx-border-width: 1;" +
-                    "-fx-border-radius: 6;" +
-                    "-fx-background-radius: 6;"
-            );*/
             //contenedorMesa.setEffect(new DropShadow(15, Color.rgb(120,170, 120,0.25)));
             filaCompleta.setDisable(true);
             filaManana.setDisable(true);
@@ -316,13 +328,6 @@ public class AsignarFiscales {
         } else { //incompleta
             //animarCambio(contenedorMesa);
             contenedorMesa.getStyleClass().add("mesa-incompleta");
-            /*contenedorMesa.setStyle(
-                    "-fx-border-color: #ecb669;" +
-                    "-fx-border-width: 1;" +
-                    "-fx-background-color: rgba(196, 166, 157, 0.356);" +
-                    "-fx-border-radius: 6;" +
-                    "-fx-background-radius: 6;"
-            );*/
             filaCompleta.setDisable(false);
             filaManana.setDisable(false);
             filaTarde.setDisable(false);
@@ -428,13 +433,6 @@ public class AsignarFiscales {
         
     }
 
-    /*private void animarCambio(Node nodo) {
-        FadeTransition ft = new FadeTransition(Duration.millis(350), nodo);
-        ft.setFromValue(0.3);
-        ft.setToValue(1);
-        ft.play();
-    }*/
-
     private HBox agregarCeldaFiscalGeneral(Fiscal fiscal, HBox contenerFiscalGeneral) {
         HBox contenedor = new HBox(5);
         contenedor.setAlignment(Pos.CENTER_LEFT);
@@ -471,7 +469,35 @@ public class AsignarFiscales {
         return true;
     }
 
-    private void agregarFilaMesa(Mesa mesa) {
+    private void refrescarEstadoComboEstablecimiento() {
+        EstablecimientoEstadoDTO seleccionado = comboBoxEstablecimiento.getValue();
+        if (seleccionado == null) return;
+
+        Task<List<EstablecimientoEstadoDTO>> tarea = new Task<List<EstablecimientoEstadoDTO>>() {
+            @Override
+            protected List<EstablecimientoEstadoDTO> call() throws Exception {
+                return servicoEst.listadoComoBoxAsignarFiscales();
+            }
+        };
+        tarea.setOnSucceeded(evento -> {
+            List<EstablecimientoEstadoDTO> nuevos = tarea.getValue();
+            refrescandoComoBox = true;
+            try {
+                comboBoxEstablecimiento.getItems().setAll(nuevos);
+                nuevos.stream()
+                        .filter(est -> Objects.equals(est.idEstablecimiento(), seleccionado.idEstablecimiento()))
+                        .findFirst()
+                        .ifPresent(comboBoxEstablecimiento::setValue);
+            } finally {
+                refrescandoComoBox = false;
+            }
+        });
+        tarea.setOnFailed(evento ->
+                mostrarMensaje("Error", "No se pudo actualizar el establecimiento en el combobox", Alert.AlertType.ERROR));
+        new Thread(tarea).start();
+    }
+
+    private VBox agregarFilaMesa(Mesa mesa) {
         //1) Contenedor principal de la mesa
         VBox contenedorMesa = new VBox(10);
         contenedorMesa.setAlignment(Pos.TOP_LEFT);
@@ -563,16 +589,23 @@ public class AsignarFiscales {
 
         Separator sepBottom = new Separator();
         //4) Eventos de asignación
-        btnAsignarCompleto.setOnAction(ev ->
-                asignarFiscal(mesa, comboCompleta, "COMPLETA", contenedorFiscales, filaCompleta, filaManana, filaTarde, fiscalesJornadaCompleta, contenedorMesa));
-        btnAsignarManana.setOnAction(ev ->
-                asignarFiscal(mesa, comboManana, "MAÑANA", contenedorFiscales, filaCompleta, filaManana, filaTarde, fiscalesJornadaManana, contenedorMesa));
-        btnAsignarTarde.setOnAction(ev ->
-                asignarFiscal(mesa, comboTarde, "TARDE", contenedorFiscales, filaCompleta, filaManana, filaTarde, fiscalesJornadaTarde, contenedorMesa));
+        btnAsignarCompleto.setOnAction(ev -> {
+            asignarFiscal(mesa, comboCompleta, "COMPLETA", contenedorFiscales, filaCompleta, filaManana, filaTarde, fiscalesJornadaCompleta, contenedorMesa);
+            refrescarEstadoComboEstablecimiento();
+        });
+        btnAsignarManana.setOnAction(ev -> {
+            asignarFiscal(mesa, comboManana, "MAÑANA", contenedorFiscales, filaCompleta, filaManana, filaTarde, fiscalesJornadaManana, contenedorMesa);
+            refrescarEstadoComboEstablecimiento();
+        });
+        btnAsignarTarde.setOnAction(ev -> {
+            asignarFiscal(mesa, comboTarde, "TARDE", contenedorFiscales, filaCompleta, filaManana, filaTarde, fiscalesJornadaTarde, contenedorMesa);
+            refrescarEstadoComboEstablecimiento();
+        });
 
         //5) Ensamblado final
         contenedorMesa.getChildren().addAll(titulo, sepTop, contenedorFiscales, sepMid, contenedorAsignacion, sepBottom);
         contenedorMesas.getChildren().add(contenedorMesa);
+        return contenedorMesa;
     }
 
     private HBox filaAsignador(String titulo, ComboBox<Fiscal> combo, Button boton) {
@@ -673,8 +706,8 @@ public class AsignarFiscales {
             if (!exito) return;
             contendorFiscales.getChildren().remove(fila);
             devolverFiscalASuListaCorrespondiente(fiscal, jornada);;
-            //VBox contenedorMesa, VBox contenedorFiscales, HBox filaCompleta, HBox filaManana, HBox filaTarde
             actualizarEstadoMesa(contenedorMesa, contendorFiscales, filaCompeta, filaManana, filaTarde);
+            refrescarEstadoComboEstablecimiento();
         });
         fila.getChildren().addAll(lblFiscal, lblJornada, btnQuitar);
         return fila;
@@ -760,15 +793,15 @@ public class AsignarFiscales {
     }
 
     private void cargarEstablecimientos() {
-        Task<List<Establecimiento>> tarea = new Task<List<Establecimiento>>() {
+        Task<List<EstablecimientoEstadoDTO>> tarea = new Task<List<EstablecimientoEstadoDTO>>() {
             @Override
-            protected List<Establecimiento> call() throws Exception {
-                return servicoEst.listarEstablecimientos();
+            protected List<EstablecimientoEstadoDTO> call() throws Exception {
+                return servicoEst.listadoComoBoxAsignarFiscales();
             }
         };
         tarea.setOnSucceeded(evento -> {
-            List<Establecimiento> lista = tarea.getValue();
-            comboBoxEstablecimiento.getItems().setAll(lista.stream().sorted(ordenarLista(Establecimiento::getNombreEstablecimiento)).toList());
+            List<EstablecimientoEstadoDTO> lista = tarea.getValue();
+            comboBoxEstablecimiento.getItems().setAll(lista);
         });
         tarea.setOnFailed(evnto -> mostrarMensaje("Error", "No se pudo recuperar la lista de Establecimientos", Alert.AlertType.ERROR));
         new Thread(tarea).start();
@@ -790,9 +823,7 @@ public class AsignarFiscales {
 
     private void limpiarFormulario() {
         mesasSeleccionadas.clear();
-        //generales.setText("");
         contenerFiscalGeneral.getChildren().clear();
-        //comboBoxFiscalGeneral.getSelectionModel().clearSelection();
         contenedorMesas.getChildren().clear();
     }
 }

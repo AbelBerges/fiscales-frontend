@@ -122,7 +122,7 @@ public class FiscalMapper {
     public static FiscalListaDTO aFiscalListaDeResponseDTO(FiscalResponseDTO dto) throws IOException, InterruptedException {
         TipoFiscal tf = new TipoFiscal();
         Jornada j = new Jornada();
-        Establecimiento vota = new Establecimiento();
+        String vota = null;
         Calle c = new Calle();
         TipoPiso tp = new TipoPiso();
         TipoDepartamento tDpto = new TipoDepartamento();
@@ -134,7 +134,7 @@ public class FiscalMapper {
             j = JornadaMapper.aEntidadCompleta(jornadaServicio.buscarPorId(dto.idJornada()));
         }
         if (dto.idEstablecimientoVotacion() != null) {
-            vota = EstablecimientoMapper.aEntidadModelo(establecimientoServicio.buscarPorId(dto.idEstablecimientoVotacion()));
+            vota = establecimientoServicio.recuperarElTipoEstablecimientoPorIdEst(dto.idEstablecimientoVotacion());
         }
         if (dto.idCalle() != null) {
             c = calleServicio.buscarPorId(dto.idCalle());
@@ -157,7 +157,7 @@ public class FiscalMapper {
                 dto.telefono(),
                 tf.getNombre(),
                 j.getTipoJornada(),
-                vota.getNombreEstablecimiento(),
+                vota,
                 null,
                 c.getNombre(),
                 dto.altura(),

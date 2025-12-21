@@ -7,11 +7,13 @@ import org.desarrollo.fiscalesfrontend.dto.FiscalListaDTO;
 import org.desarrollo.fiscalesfrontend.dto.FiscalRequestDTO;
 import org.desarrollo.fiscalesfrontend.dto.FiscalResponseDTO;
 import org.desarrollo.fiscalesfrontend.mapper.FiscalMapper;
+import org.desarrollo.fiscalesfrontend.model.Calle;
 import org.desarrollo.fiscalesfrontend.model.Fiscal;
 
 import java.awt.datatransfer.FlavorEvent;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -21,8 +23,8 @@ import java.util.List;
 
 public class FiscalServicio {
 
-    //private static final String URL_BASE = "http://localhost:8080/fiscales";
-    private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/fiscales";
+    private static final String URL_BASE = "http://localhost:8080/fiscales";
+    //private static final String URL_BASE = "https://fiscales-backend-production.up.railway.app/fiscales";
     private HttpClient cliente;
     private ObjectMapper mapeo;
 
@@ -49,6 +51,7 @@ public class FiscalServicio {
             throw new IOException("Error al listar los fiscales " + respuesta.statusCode());
         }
     }
+
 
     public List<String> todosFiscalesPorApellido() throws IOException, InterruptedException{
         HttpRequest requerimiento = HttpRequest.newBuilder()
@@ -97,6 +100,20 @@ public class FiscalServicio {
             throw new IOException("Error al recuperar la lista para la lista de las tablas");
         }
     }
+
+    public List<FiscalListaDTO> listarFiscalesPorEstablecimiento(Integer idEst) throws IOException, InterruptedException {
+        HttpRequest requerimiento = HttpRequest.newBuilder()
+                .uri(URI.create(URL_BASE + "/fiscales-por-establecimiento/" + idEst))
+                .GET()
+                .build();
+        HttpResponse<String> respuesta = cliente.send(requerimiento, HttpResponse.BodyHandlers.ofString());
+        if (respuesta.statusCode() == 200) {
+            return mapeo.readValue(respuesta.body(), new TypeReference<List<FiscalListaDTO>>() {});
+        } else {
+            throw new IOException("Error al recuperar la lista de los fiscales por establecimiento");
+        }
+    }
+
 
     //======================= LISTAR FISCALES POR TIPO DE FISCAL ======================
     public List<Fiscal> listaPorTipoFiscal(Integer id) throws IOException, InterruptedException {
